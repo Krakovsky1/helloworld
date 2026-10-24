@@ -1,0 +1,380 @@
+{
+ "objects": [
+  {
+   "prefab": "island_terrain",
+   "x": 0,
+   "y": 0,
+   "z": 0,
+   "rotY": 0,
+   "scale": 1
+  },
+  {
+   "prefab": "water_surface",
+   "x": 0,
+   "y": -0.02,
+   "z": 0,
+   "rotY": 0,
+   "scale": 1
+  },
+  {
+   "prefab": "water_far",
+   "x": 0,
+   "y": -0.04,
+   "z": 0,
+   "rotY": 0,
+   "scale": 1
+  },
+  {
+   "prefab": "building_hotel",
+   "x": -2.896,
+   "y": 0.39,
+   "z": 1.267,
+   "rotY": 0.0,
+   "scale": 0.95
+  },
+  {
+   "prefab": "building_reception",
+   "x": 3.62,
+   "y": 0.39,
+   "z": 3.077,
+   "rotY": 0.0,
+   "scale": 0.9
+  },
+  {
+   "prefab": "building_bar_hut",
+   "x": -2.444,
+   "y": 0.375,
+   "z": -4.073,
+   "rotY": 0.0,
+   "scale": 0.85
+  },
+  {
+   "prefab": "tree_big",
+   "x": 0.724,
+   "y": 0.39,
+   "z": 5.25,
+   "rotY": 22.9,
+   "scale": 0.95
+  },
+  {
+   "prefab": "palm_a",
+   "x": -2.534,
+   "y": 0.39,
+   "z": 3.982,
+   "rotY": 0.0,
+   "scale": 0.8
+  },
+  {
+   "prefab": "palm_b",
+   "x": -5.702,
+   "y": 0.306,
+   "z": -2.625,
+   "rotY": 57.3,
+   "scale": 0.8
+  },
+  {
+   "prefab": "palm_small",
+   "x": -4.888,
+   "y": 0.39,
+   "z": 0.0,
+   "rotY": 114.6,
+   "scale": 0.85
+  },
+  {
+   "prefab": "palm_b",
+   "x": 0.272,
+   "y": 0.39,
+   "z": 2.444,
+   "rotY": 171.9,
+   "scale": 0.7
+  },
+  {
+   "prefab": "palm_a",
+   "x": -3.892,
+   "y": 0.201,
+   "z": -5.521,
+   "rotY": 229.2,
+   "scale": 0.7
+  },
+  {
+   "prefab": "palm_small",
+   "x": 4.073,
+   "y": -0.309,
+   "z": 5.521,
+   "rotY": 286.5,
+   "scale": 0.85
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": 1.448,
+   "y": 0.39,
+   "z": 1.991,
+   "rotY": 0.0,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_small",
+   "x": 2.172,
+   "y": 0.39,
+   "z": 0.181,
+   "rotY": 57.3,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": -2.353,
+   "y": 0.39,
+   "z": -0.543,
+   "rotY": 114.6,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": -0.543,
+   "y": 0.39,
+   "z": -3.62,
+   "rotY": 171.9,
+   "scale": 1.05
+  },
+  {
+   "prefab": "bush_small",
+   "x": -4.163,
+   "y": 0.39,
+   "z": -2.896,
+   "rotY": 229.2,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": 3.982,
+   "y": 0.39,
+   "z": 0.543,
+   "rotY": 286.5,
+   "scale": 0.9
+  },
+  {
+   "prefab": "bush_small",
+   "x": -3.62,
+   "y": 0.39,
+   "z": 1.81,
+   "rotY": 343.8,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": 2.172,
+   "y": 0.06,
+   "z": 5.793,
+   "rotY": 401.1,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": 1.448,
+   "y": 0.39,
+   "z": -0.362,
+   "rotY": 458.4,
+   "scale": 0.9
+  },
+  {
+   "prefab": "bush_small",
+   "x": -1.81,
+   "y": 0.39,
+   "z": 1.086,
+   "rotY": 515.7,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": -1.086,
+   "y": 0.39,
+   "z": -1.448,
+   "rotY": 573.0,
+   "scale": 0.9
+  },
+  {
+   "prefab": "bush_small",
+   "x": 2.806,
+   "y": 0.39,
+   "z": 2.444,
+   "rotY": 630.3,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": -4.797,
+   "y": 0.39,
+   "z": -0.634,
+   "rotY": 687.5,
+   "scale": 1
+  },
+  {
+   "prefab": "bush_small",
+   "x": -3.711,
+   "y": 0.336,
+   "z": -3.892,
+   "rotY": 744.8,
+   "scale": 0.9
+  },
+  {
+   "prefab": "bush_flowers",
+   "x": -2.082,
+   "y": 0.39,
+   "z": 2.625,
+   "rotY": 802.1,
+   "scale": 1.05
+  },
+  {
+   "prefab": "bush_small",
+   "x": 0.362,
+   "y": 0.39,
+   "z": -2.172,
+   "rotY": 859.4,
+   "scale": 0.8
+  },
+  {
+   "prefab": "rock_big",
+   "x": 6.336,
+   "y": 0.07,
+   "z": 2.896,
+   "rotY": 0.0,
+   "scale": 1
+  },
+  {
+   "prefab": "rock_small",
+   "x": 6.517,
+   "y": 0.276,
+   "z": 1.448,
+   "rotY": 57.3,
+   "scale": 1
+  },
+  {
+   "prefab": "rock_big",
+   "x": -2.715,
+   "y": -0.318,
+   "z": -6.879,
+   "rotY": 114.6,
+   "scale": 1
+  },
+  {
+   "prefab": "rock_small",
+   "x": -1.086,
+   "y": -0.38,
+   "z": -7.06,
+   "rotY": 171.9,
+   "scale": 1
+  },
+  {
+   "prefab": "sunbed",
+   "x": 5.159,
+   "y": 0.32,
+   "z": -0.815,
+   "rotY": 11.5,
+   "scale": 1
+  },
+  {
+   "prefab": "beach_umbrella",
+   "x": 5.34,
+   "y": 0.32,
+   "z": -0.091,
+   "rotY": 0.0,
+   "scale": 0.75
+  },
+  {
+   "prefab": "sunbed",
+   "x": 1.629,
+   "y": 0.103,
+   "z": -5.25,
+   "rotY": -5.7,
+   "scale": 1
+  },
+  {
+   "prefab": "beach_umbrella",
+   "x": 0.815,
+   "y": -0.001,
+   "z": -5.521,
+   "rotY": 0.0,
+   "scale": 0.75
+  },
+  {
+   "prefab": "sunbed",
+   "x": 4.073,
+   "y": 0.32,
+   "z": -3.168,
+   "rotY": 5.7,
+   "scale": 0.9
+  },
+  {
+   "prefab": "tiki_torch",
+   "x": 2.987,
+   "y": 0.335,
+   "z": -0.815,
+   "rotY": 0.0,
+   "scale": 1
+  },
+  {
+   "prefab": "tiki_torch",
+   "x": 0.543,
+   "y": 0.335,
+   "z": -3.439,
+   "rotY": 0.0,
+   "scale": 1
+  },
+  {
+   "prefab": "barrel",
+   "x": 5.25,
+   "y": 0.119,
+   "z": 3.62,
+   "rotY": 57.3,
+   "scale": 1
+  },
+  {
+   "prefab": "crate",
+   "x": 5.431,
+   "y": 0.28,
+   "z": 2.896,
+   "rotY": 17.2,
+   "scale": 1
+  },
+  {
+   "prefab": "stepping_stones",
+   "x": -0.272,
+   "y": 0.4,
+   "z": 0.634,
+   "rotY": -45.0,
+   "scale": 1.15
+  },
+  {
+   "prefab": "boat",
+   "x": 8.917,
+   "y": 0.0,
+   "z": 2.666,
+   "rotY": 34.4,
+   "scale": 1
+  },
+  {
+   "prefab": "boat",
+   "x": 8.825,
+   "y": 0.0,
+   "z": 0.368,
+   "rotY": 74.5,
+   "scale": 1
+  },
+  {
+   "prefab": "boat",
+   "x": -1.011,
+   "y": 0.0,
+   "z": -9.652,
+   "rotY": 137.5,
+   "scale": 1
+  },
+  {
+   "prefab": "boat",
+   "x": -2.666,
+   "y": 0.0,
+   "z": -9.468,
+   "rotY": 11.5,
+   "scale": 1
+  }
+ ]
+}

@@ -1,0 +1,56 @@
+{
+ "buildSlots": [
+  {
+   "id": "P1",
+   "size": 5.4,
+   "x": -5.728,
+   "y": 0.39,
+   "z": -3.606
+  },
+  {
+   "id": "P2",
+   "size": 5.4,
+   "x": -2.828,
+   "y": 0.259,
+   "z": 6.788
+  },
+  {
+   "id": "P3",
+   "size": 3.8,
+   "x": -8.485,
+   "y": 0.05,
+   "z": -0.566
+  },
+  {
+   "id": "P4",
+   "size": 3.8,
+   "x": -1.414,
+   "y": 0.315,
+   "z": -6.505
+  },
+  {
+   "id": "P5",
+   "size": 3.8,
+   "x": 5.657,
+   "y": 0.32,
+   "z": 0.0
+  }
+ ],
+ "startingBuildings": [
+  {
+   "id": "H",
+   "building": "building_hotel",
+   "x": -4.101,
+   "y": 0.39,
+   "z": 2.404
+  },
+  {
+   "id": "R",
+   "building": "building_reception",
+   "x": 2.687,
+   "y": 0.39,
+   "z": 4.384
+  }
+ ],
+ "note": "x,y,z in OBJ space; Unity X is mirrored (MirrorX in HPStyleTools)."
+}
