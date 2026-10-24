@@ -1,0 +1,14 @@
+newmtl Coast_Straight_Terrain
+Kd 1 1 1
+Ka 0 0 0
+Ks 0 0 0
+Ns 1
+map_Kd ../Textures/Coast_Straight_Terrain.jpg
+
+newmtl Palette
+Kd 1 1 1
+Ka 0 0 0
+Ks 0 0 0
+Ns 1
+map_Kd ../Textures/Palette.png
+
