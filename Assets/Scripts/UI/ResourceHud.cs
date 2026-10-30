@@ -181,10 +181,10 @@ public class ResourceHud : MonoBehaviour
         var valueRect = valueGo.GetComponent<RectTransform>();
         valueRect.anchorMin = new Vector2(0f, 0f);
         valueRect.anchorMax = new Vector2(1f, 0.58f);
-        valueRect.offsetMin = new Vector2(82f, 8f);
-        valueRect.offsetMax = new Vector2(-16f, 2f);
+        valueRect.offsetMin = new Vector2(82f, 12f);
+        valueRect.offsetMax = new Vector2(-16f, 8f);
         valueLabel = valueGo.AddComponent<Text>();
-        SetupText(valueLabel, 30, new Color(1f, 0.97f, 0.88f, 1f));
+        SetupText(valueLabel, 24, new Color(1f, 0.97f, 0.88f, 1f));
         valueLabel.fontStyle = FontStyle.Bold;
         CartoonOutline(valueGo);
     }

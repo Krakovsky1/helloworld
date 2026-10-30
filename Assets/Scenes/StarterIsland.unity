@@ -4529,6 +4529,78 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 50, y: -30, z: 0}
+--- !u!1 &2107340001
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2107340002}
+  - component: {fileID: 2107340003}
+  m_Layer: 0
+  m_Name: BuildingUpgradeManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2107340002
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2107340001}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &2107340003
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2107340001}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2db5d1ccfb44972b9fcbf0934da0ea0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  types:
+  - label: Hotel
+    iconResource: UI/Icons/building_hotel
+    levels:
+    - {fileID: 919132149155446097, guid: d24f6cae5adced2449ace8f006f4817f, type: 3}
+    - {fileID: 919132149155446097, guid: 4d8b249ef2b23734ea3945ef7e82bc01, type: 3}
+    - {fileID: 919132149155446097, guid: 1045ce8a51dca4c4ea058a2b5f334d09, type: 3}
+    - {fileID: 919132149155446097, guid: d9a42c4efa7aa194ead23fd812e3876e, type: 3}
+    upgradeCoins: 1e0000003200000050000000i
+    upgradeEnergy: 04000000060000000a000000i
+  - label: Restaurant
+    iconResource: UI/Icons/building_restaurant
+    levels:
+    - {fileID: 919132149155446097, guid: d91fb704fac63244f9093a7737f21077, type: 3}
+    - {fileID: 919132149155446097, guid: 4a5a5e96549f4bb9b02a15c601354558, type: 3}
+    - {fileID: 919132149155446097, guid: 6ba8acf48f2b41c79b7e3c44a77c19bb, type: 3}
+    upgradeCoins: 190000002d000000i
+    upgradeEnergy: 0300000005000000i
+  - label: Bar
+    iconResource: UI/Icons/building_bar
+    levels:
+    - {fileID: 919132149155446097, guid: ef337eb028a23e54793b070926bd9a66, type: 3}
+    - {fileID: 919132149155446097, guid: da6bbb1a8fb94835804b42d5f45da05d, type: 3}
+    - {fileID: 919132149155446097, guid: cf882bb1620f423cb17d5582931f33a2, type: 3}
+    upgradeCoins: 1400000028000000i
+    upgradeEnergy: 0200000004000000i
+  iconSize: 48
+  heightAboveBuilding: 0.6
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -4602,3 +4674,4 @@ SceneRoots:
   - {fileID: 2087593928}
   - {fileID: 1893276345}
   - {fileID: 1321503623}
+  - {fileID: 2107340002}
