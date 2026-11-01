@@ -57,6 +57,22 @@ public class BuildingUpgradeManager : MonoBehaviour
     Canvas canvas;
     Camera cam;
 
+    // Aktuálna úroveň budovy podľa názvu typu (napr. "Hotel"): 1 = Level 1. Vráti 0, ak sa budova nenašla.
+    public int GetLevel(string label)
+    {
+        foreach (var b in buildings)
+            if (b.instance != null && b.type.label == label) return b.level + 1;
+        return 0;
+    }
+
+    // Aktuálny objekt budovy v scéne (po upgrade je to nový model). Vráti null, ak sa budova nenašla.
+    public GameObject GetBuilding(string label)
+    {
+        foreach (var b in buildings)
+            if (b.instance != null && b.type.label == label) return b.instance;
+        return null;
+    }
+
     void Start()
     {
         if (types == null || types.Length == 0)
