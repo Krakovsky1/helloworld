@@ -33,9 +33,6 @@ public class GuestWaveManager : MonoBehaviour
     [Header("Lode")]
     [SerializeField] BoatLevel[] boats;
 
-    [SerializeField]
-    int[] boatForHotelLevel = { 0, 1, 1, 2 };
-
     [SerializeField] float boatSpeed = 4f;
     [SerializeField] float boatTurnSpeed = 70f;
     [SerializeField] float boatYawOffset = 90f;
@@ -158,32 +155,15 @@ public class GuestWaveManager : MonoBehaviour
             return;
         }
 
-        int hotelLevel = upgrades != null
-            ? Mathf.Max(1, upgrades.GetLevel(hotelLabel))
-            : 1;
+        // Veľkosť vlny a loď určuje najnižšia úroveň hotela,
+        // reštaurácie a baru (úroveň celého rezortu).
+        int resortLevel = GetResortLevel();
 
-        // Hotel level určuje najvyššiu dostupnú kategóriu lode.
-        // Z dostupných kategórií sa potom náhodne vyberie veľkosť vlny.
-        int maxUnlockedBoatIndex = boatForHotelLevel != null &&
-                                   boatForHotelLevel.Length > 0
-            ? boatForHotelLevel[
-                Mathf.Clamp(
-                    hotelLevel - 1,
-                    0,
-                    boatForHotelLevel.Length - 1
-                )
-            ]
-            : 0;
-
-        maxUnlockedBoatIndex = Mathf.Clamp(
-            maxUnlockedBoatIndex,
+        // Level 1 = prvá loď, Level 2 = druhá loď, Level 3 = tretia loď.
+        int boatIndex = Mathf.Clamp(
+            resortLevel - 1,
             0,
             boats.Length - 1
-        );
-
-        int boatIndex = UnityEngine.Random.Range(
-            0,
-            maxUnlockedBoatIndex + 1
         );
 
         if (boats[boatIndex].model == null)
@@ -211,12 +191,43 @@ public class GuestWaveManager : MonoBehaviour
 
         Debug.Log(
             "Vlna " + WaveNumber +
-            ": hotel Level " + hotelLevel +
+            ": rezort Level " + resortLevel +
             " -> " + boats[boatIndex].label +
             " (" + boats[boatIndex].guestCount + " hostí)"
         );
 
         StartCoroutine(RunWave(boats[boatIndex]));
+    }
+
+    // Úroveň rezortu je najnižšia úroveň hotela, reštaurácie a baru.
+    // Ak niektorá budova alebo BuildingUpgradeManager chýba,
+    // bezpečne použijeme Level 1.
+    public int GetResortLevel()
+    {
+        if (upgrades == null)
+            upgrades = FindAnyObjectByType<BuildingUpgradeManager>();
+
+        if (upgrades == null)
+        {
+            Debug.LogWarning(
+                "GuestWaveManager: BuildingUpgradeManager sa nenašiel; používam rezort Level 1."
+            );
+            return 1;
+        }
+
+        int hotel = upgrades.GetLevel(hotelLabel);
+        int restaurant = upgrades.GetLevel("Restaurant");
+        int bar = upgrades.GetLevel("Bar");
+
+        if (hotel < 1 || restaurant < 1 || bar < 1)
+        {
+            Debug.LogWarning(
+                "GuestWaveManager: Hotel/Restaurant/Bar sa nenašiel; používam rezort Level 1."
+            );
+            return 1;
+        }
+
+        return Mathf.Min(hotel, restaurant, bar);
     }
 
     // ----------------------------------------------------------------
