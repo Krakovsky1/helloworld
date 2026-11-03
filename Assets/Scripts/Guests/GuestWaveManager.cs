@@ -17,7 +17,8 @@ using UnityEngine.UI;
 //   boatLeavePath - prvý bod loď dosiahne cúvaním, potom odpláva cez ostatné body
 //   guestPath     - cesta hostí z móla na pláž; posledné kroky k dverám sa rátajú od aktuálneho hotela
 //                   (body sú vybrané tak, aby hostia obišli kamene, palmy aj stĺpiky móla)
-public class GuestWaveManager : MonoBehaviour
+// Odchod hostí z ostrova je v súbore GuestWaveManager.Departure.cs (partial trieda).
+public partial class GuestWaveManager : MonoBehaviour
 {
     [Serializable]
     public class BoatLevel
@@ -187,6 +188,7 @@ public class GuestWaveManager : MonoBehaviour
         WaveNumber++;
         Debug.Log("FR-11 | Vlna " + WaveNumber + ": rezort Level " + resortLevel + " -> " + boats[boatIndex].label +
                   " (" + boats[boatIndex].guestCount + " hostí)");
+        currentWaveBoat = boats[boatIndex]; // rovnaká loď príde aj po hostí pri odchode
         StartCoroutine(RunWave(boats[boatIndex]));
     }
 
@@ -728,29 +730,22 @@ public class GuestWaveManager : MonoBehaviour
                 speed
             );
 
-            yield return WalkSegment(
+            // Hosť vojde do dverí, zmenší sa a zmizne (ako predtým).
+            // Objekt hosťa ostáva aktívny (len neviditeľný), aby fungovali
+            // jeho potreby, panel ACCEPT/REJECT a neskôr odchod z ostrova.
+            yield return WalkScaled(
                 guest.transform,
                 front,
                 door,
-                speed
+                speed,
+                guestScale,
+                0f
             );
 
-            Vector3 stayOffset = new Vector3(
-                UnityEngine.Random.Range(
-                    -hotelGuestSpacing,
-                    hotelGuestSpacing
-                ),
-                0f,
-                UnityEngine.Random.Range(
-                    -hotelGuestSpacing,
-                    hotelGuestSpacing
-                )
-            );
-
-            guest.transform.position = door + stayOffset;
+            HideGuest(guest);
 
             if (anim != null)
-                anim.state = CharState.Happy;
+                anim.state = CharState.Idle;
 
             if (needsGenerator != null)
                 needsGenerator.StartGenerating();
@@ -861,6 +856,9 @@ public class GuestWaveManager : MonoBehaviour
 
         Debug.Log("Hráč odmietol celú vlnu hostí.");
         WaveRejected?.Invoke(CurrentWaveGuests);
+
+        // Odmietnutí hostia hneď odchádzajú z hotela na loď.
+        StartDeparture();
         return true;
     }
 
@@ -878,6 +876,9 @@ public class GuestWaveManager : MonoBehaviour
 
         Debug.Log("Čas pobytu hostí sa skončil.");
         GuestStayFinished?.Invoke(CurrentWaveGuests);
+
+        // Koniec pobytu: hostia odchádzajú z hotela na loď.
+        StartDeparture();
     }
 
     // Filip zavolá túto metódu až po dokončení odchodovej animácie.
