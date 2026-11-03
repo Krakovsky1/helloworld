@@ -6,6 +6,17 @@ using System.Globalization;
 using UnityEngine;
 using UnityEngine.UI;
 
+// Vlna hostí: po stlačení START WAVE pripláva k mólu loď, hostia vystúpia a prejdú do hotela.
+// FR-11: loď a počet hostí závisia od úrovne celého rezortu.
+// Úroveň rezortu = najnižšia úroveň hotela, reštaurácie a baru (max. Level 3 pri súčasných budovách).
+//
+// Trasy sú poskladané z detí objektov v scéne (dajú sa posúvať v editore, v Scene view sú vidieť ako čiary):
+//   boatPath      - body, cez ktoré loď pripláva (posledný bod má byť pred kotviskom, v smere príchodu)
+//   dock          - kotvisko: bod na hrane móla, kde sa zastaví PREDOK lode; modrá os (Z) = smer lode,
+//                   loď stojí bokom k mólu (pierOnRightSide = mólo je po pravej ruke lode)
+//   boatLeavePath - prvý bod loď dosiahne cúvaním, potom odpláva cez ostatné body
+//   guestPath     - cesta hostí z móla na pláž; posledné kroky k dverám sa rátajú od aktuálneho hotela
+//                   (body sú vybrané tak, aby hostia obišli kamene, palmy aj stĺpiky móla)
 public class GuestWaveManager : MonoBehaviour
 {
     [Serializable]
@@ -32,7 +43,9 @@ public class GuestWaveManager : MonoBehaviour
 
     [Header("Lode")]
     [SerializeField] BoatLevel[] boats;
-
+    // Staré pole ponechávame pre kompatibilitu s GuestArrivalSetup a existujúcou scénou.
+    // FR-11 ho už nepoužíva; namiesto neho platí poradie lodí L1, L2, L3 v poli Boats.
+    [SerializeField, HideInInspector] int[] boatForHotelLevel = { 0, 1, 1, 2 };
     [SerializeField] float boatSpeed = 4f;
     [SerializeField] float boatTurnSpeed = 70f;
     [SerializeField] float boatYawOffset = 90f;
@@ -146,26 +159,10 @@ public class GuestWaveManager : MonoBehaviour
             return;
         }
 
-        if (boats == null || boats.Length == 0 ||
-            dock == null || boatPath == null)
-        {
-            Debug.LogWarning(
-                "GuestWaveManager: chýbajú lode alebo trasa."
-            );
-            return;
-        }
-
-        // Veľkosť vlny a loď určuje najnižšia úroveň hotela,
-        // reštaurácie a baru (úroveň celého rezortu).
+        // FR-11: úroveň rezortu odvodíme od všetkých troch budov.
+        // Opakovaná vlna na rovnakej úrovni prinesie rovnaký počet hostí.
         int resortLevel = GetResortLevel();
-
-        // Level 1 = prvá loď, Level 2 = druhá loď, Level 3 = tretia loď.
-        int boatIndex = Mathf.Clamp(
-            resortLevel - 1,
-            0,
-            boats.Length - 1
-        );
-
+        int boatIndex = Mathf.Clamp(resortLevel - 1, 0, boats.Length - 1);
         if (boats[boatIndex].model == null)
         {
             Debug.LogWarning(
@@ -188,20 +185,13 @@ public class GuestWaveManager : MonoBehaviour
         IsWaveAccepted = false;
 
         WaveNumber++;
-
-        Debug.Log(
-            "Vlna " + WaveNumber +
-            ": rezort Level " + resortLevel +
-            " -> " + boats[boatIndex].label +
-            " (" + boats[boatIndex].guestCount + " hostí)"
-        );
-
+        Debug.Log("FR-11 | Vlna " + WaveNumber + ": rezort Level " + resortLevel + " -> " + boats[boatIndex].label +
+                  " (" + boats[boatIndex].guestCount + " hostí)");
         StartCoroutine(RunWave(boats[boatIndex]));
     }
 
-    // Úroveň rezortu je najnižšia úroveň hotela, reštaurácie a baru.
-    // Ak niektorá budova alebo BuildingUpgradeManager chýba,
-    // bezpečne použijeme Level 1.
+    // Úroveň rezortu je najnižšia zo súčasných úrovní hotela, reštaurácie a baru.
+    // Ak niektorá budova/manažér chýba, zatiaľ použijeme Level 1.
     public int GetResortLevel()
     {
         if (upgrades == null)
@@ -209,9 +199,7 @@ public class GuestWaveManager : MonoBehaviour
 
         if (upgrades == null)
         {
-            Debug.LogWarning(
-                "GuestWaveManager: BuildingUpgradeManager sa nenašiel; používam rezort Level 1."
-            );
+            Debug.LogWarning("FR-11: BuildingUpgradeManager sa nenašiel; používam rezort Level 1.");
             return 1;
         }
 
@@ -221,18 +209,14 @@ public class GuestWaveManager : MonoBehaviour
 
         if (hotel < 1 || restaurant < 1 || bar < 1)
         {
-            Debug.LogWarning(
-                "GuestWaveManager: Hotel/Restaurant/Bar sa nenašiel; používam rezort Level 1."
-            );
+            Debug.LogWarning("FR-11: Hotel/Restaurant/Bar sa nenašiel; používam rezort Level 1.");
             return 1;
         }
 
         return Mathf.Min(hotel, restaurant, bar);
     }
 
-    // ----------------------------------------------------------------
-    // LOĎ A VYSADZOVANIE HOSTÍ
-    // ----------------------------------------------------------------
+    // ---------------------------------------------------------------- loď
 
     IEnumerator RunWave(BoatLevel level)
     {
