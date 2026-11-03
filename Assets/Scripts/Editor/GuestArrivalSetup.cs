@@ -2,7 +2,8 @@
 // Vytvorí (alebo nanovo vytvorí) objekt GuestArrival s manažérom vlny, trasou lode a cestou hostí.
 // Súradnice sú pre scénu StarterIsland: loď pripláva zo západu popri južnom pobreží a zakotví
 // vo vnútornom rohu móla Pier_L (bokom k L-ramenu), hostia idú po móle a popri kamienkovom chodníku k hotelu.
-// Ak mólo alebo hotel presunieš, posuň aj body trás (deti objektov BoatPath, Dock, BoatLeavePath, GuestPath).
+// Ak mólo alebo hotel presunieš, posuň aj body trás (deti objektov BoatPath, Dock, BoatLeavePath, GuestPath
+// a pre odchod hostí DepartBoatPath, DepartGuestPath, DepartBoatLeavePath).
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -55,6 +56,53 @@ public static class GuestArrivalSetup
         new Vector3(10.05f, 0.82f, 7.2f),
     };
 
+    // Odchod: loď pripláva po hostí (fialová trasa), potom zastaví na rovnakom kotvisku (Dock).
+    static readonly Vector3[] DepartBoatIn =
+    {
+        new Vector3(-14f, 0f, -9.1f),
+        new Vector3(-7.27f, 0f, -2.4f),
+        new Vector3(-4.88f, 0f, -0.02f),
+        new Vector3(-3.42f, 0.1f, 0.49f),
+        new Vector3(-0.35f, 0.15f, -2.77f),
+        new Vector3(1.33f, 0.16f, -3.88f),
+        new Vector3(2.82f, 0.14f, -4.36f),
+        new Vector3(4.37f, 0.13f, -4.88f),
+        new Vector3(5.62f, 0.12f, -4.99f),
+        new Vector3(6.92f, 0.15f, -5.92f),
+    };
+
+    // Odchod: hostia idú z hotela na mólo (červená trasa); posledný bod = miesto, kde čakajú na loď.
+    static readonly Vector3[] DepartGuestWalk =
+    {
+        new Vector3(10.05f, 0.82f, 7.2f),
+        new Vector3(10.28f, 0.82f, 6.2f),
+        new Vector3(10.08f, 0.83f, 4.56f),
+        new Vector3(10.29f, 0.82f, 1.21f),
+        new Vector3(9.98f, 0.83f, -1.81f),
+        new Vector3(10.22f, 0.82f, -2.53f),
+        new Vector3(10.14f, 0.8f, -3.71f),
+        new Vector3(10.1f, 0.63f, -4.3f),
+        new Vector3(10.08f, 1.02f, -4.75f),
+        new Vector3(10.08f, 1.02f, -5.2f),
+        new Vector3(10.08f, 1.02f, -6.5f),
+        new Vector3(10.06f, 1.02f, -8.3f),
+        new Vector3(9f, 1.02f, -8.1f),
+        new Vector3(8.1f, 1.02f, -7.96f),
+        new Vector3(7.75f, 1.02f, -7.75f),
+    };
+
+    // Odchod: loď cúvne k prvému bodu a odpláva preč (oranžová trasa).
+    static readonly Vector3[] DepartBoatLeave =
+    {
+        new Vector3(2.9f, 0f, -6.9f),
+        new Vector3(3.3f, 0f, -8f),
+        new Vector3(4.72f, 0f, -9.3f),
+        new Vector3(7.42f, 0f, -10.48f),
+        new Vector3(11.85f, 0f, -10.16f),
+        new Vector3(14.4f, 0f, -10.61f),
+        new Vector3(24f, 0f, -10.3f),
+    };
+
     static readonly string[] GuestNames =
     {
         "Father", "Mother", "Boy", "Girl", "YoungMan", "YoungWoman", "SeniorMan", "SeniorWoman", "BusinessMan", "BusinessWoman", "WealthyMan", "WealthyWoman"
@@ -77,6 +125,9 @@ public static class GuestArrivalSetup
         dock.rotation = DockRotation;
         var boatLeavePath = Group(root.transform, "BoatLeavePath", "Leave", BoatLeave);
         var guestPath = Group(root.transform, "GuestPath", "Walk", GuestWalk);
+        var departBoatPath = Group(root.transform, "DepartBoatPath", "DBoat", DepartBoatIn);
+        var departGuestPath = Group(root.transform, "DepartGuestPath", "DWalk", DepartGuestWalk);
+        var departBoatLeavePath = Group(root.transform, "DepartBoatLeavePath", "DLeave", DepartBoatLeave);
 
         var so = new SerializedObject(manager);
 
@@ -105,6 +156,9 @@ public static class GuestArrivalSetup
         so.FindProperty("dock").objectReferenceValue = dock;
         so.FindProperty("boatLeavePath").objectReferenceValue = boatLeavePath;
         so.FindProperty("guestPath").objectReferenceValue = guestPath;
+        so.FindProperty("departBoatPath").objectReferenceValue = departBoatPath;
+        so.FindProperty("departGuestPath").objectReferenceValue = departGuestPath;
+        so.FindProperty("departBoatLeavePath").objectReferenceValue = departBoatLeavePath;
         so.FindProperty("hotelEntryLocal").vector3Value = new Vector3(0f, 0.1f, 2.15f);
         so.FindProperty("hotelFrontLocal").vector3Value = new Vector3(0f, 0.1f, 2f);
         so.FindProperty("hotelDoorLocal").vector3Value = new Vector3(0f, 0.1f, 1.7f);
