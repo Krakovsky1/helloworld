@@ -1,3 +1,4 @@
+
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -23,9 +24,11 @@ public class GuestWaveManager : MonoBehaviour
     {
         public string label = "Boat L1";
         public GameObject model;
+
         [Tooltip("Koľko hostí loď privezie")]
         public int guestCount = 3;
-        [Tooltip("Výška paluby nad hladinou (m), odtiaľ hostia vystupujú")]
+
+        [Tooltip("Výška paluby nad hladinou")]
         public float deckHeight = 0.15f;
     }
 
@@ -33,7 +36,8 @@ public class GuestWaveManager : MonoBehaviour
     public class GuestModel
     {
         public GameObject model;
-        [Tooltip("Rigs/<Meno>.rig.txt - polohy kĺbov pre animáciu (nepovinné)")]
+
+        [Tooltip("Rigs/<Meno>.rig.txt - polohy kĺbov pre animáciu")]
         public TextAsset rig;
     }
 
@@ -43,23 +47,23 @@ public class GuestWaveManager : MonoBehaviour
     // FR-11 ho už nepoužíva; namiesto neho platí poradie lodí L1, L2, L3 v poli Boats.
     [SerializeField, HideInInspector] int[] boatForHotelLevel = { 0, 1, 1, 2 };
     [SerializeField] float boatSpeed = 4f;
-    [Tooltip("Ako rýchlo sa loď otáča (stupne za sekundu)")]
     [SerializeField] float boatTurnSpeed = 70f;
-    [Tooltip("Otočenie modelu lode tak, aby predok mieril dopredu (modely majú predok na -X)")]
     [SerializeField] float boatYawOffset = 90f;
-    [Tooltip("Medzera medzi bokom lode a mólom (m)")]
     [SerializeField] float dockGap = 0.08f;
-    [Tooltip("Mólo je po pravej strane lode, keď stojí pri kotvisku")]
     [SerializeField] bool pierOnRightSide = true;
 
     [Header("Hostia")]
     [SerializeField] GuestModel[] guestModels;
     [SerializeField] float guestScale = 0.5f;
     [SerializeField] float guestSpeed = 1.1f;
-    [Tooltip("Rozostup medzi vystupujúcimi hosťami (s)")]
     [SerializeField] float guestSpawnInterval = 0.7f;
 
-    [Header("Trasy (deti týchto objektov sú body trasy)")]
+    [Header("Pobyt hostí")]
+    [SerializeField] float minGuestStaySeconds = 60f;
+    [SerializeField] float maxGuestStaySeconds = 120f;
+    [SerializeField] float hotelGuestSpacing = 0.3f;
+
+    [Header("Trasy")]
     [SerializeField] Transform boatPath;
     [SerializeField] Transform dock;
     [SerializeField] Transform boatLeavePath;
@@ -67,31 +71,77 @@ public class GuestWaveManager : MonoBehaviour
 
     [Header("Hotel")]
     [SerializeField] string hotelLabel = "Hotel";
-    [Tooltip("Vstup na podložku hotela, v súradniciach hotela")]
     [SerializeField] Vector3 hotelEntryLocal = new Vector3(0f, 0.1f, 2.15f);
-    [Tooltip("Miesto pred dverami (tu sa host začne zmenšovať), v súradniciach hotela")]
     [SerializeField] Vector3 hotelFrontLocal = new Vector3(0f, 0.1f, 2.0f);
-    [Tooltip("Dvere, kde host zmizne - pred stenou pri všetkých úrovniach hotela, v súradniciach hotela")]
     [SerializeField] Vector3 hotelDoorLocal = new Vector3(0f, 0.1f, 1.7f);
+
+    // ----------------------------------------------------------------
+    // UDALOSTI
+    // ----------------------------------------------------------------
 
     public event Action GuestArrived;
     public event Action WaveFinished;
 
+    // Vyvolá sa až po príchode všetkých hostí aktuálnej vlny.
+    public event Action<IReadOnlyList<GameObject>> WaveReadyForDecision;
+
+    // Rozhodnutia hráča a koniec pobytu. Filipova animácia sa môže
+    // pripojiť na tieto udalosti bez zásahu do pohybu hostí.
+    public event Action<IReadOnlyList<GameObject>> WaveAccepted;
+    public event Action<IReadOnlyList<GameObject>> WaveRejected;
+    public event Action<IReadOnlyList<GameObject>> GuestStayFinished;
+
+    // ----------------------------------------------------------------
+    // STAV VLNY
+    // ----------------------------------------------------------------
+
     public bool WaveRunning { get; private set; }
     public int WaveNumber { get; private set; }
+
+    private readonly List<GameObject> currentWaveGuests =
+        new List<GameObject>();
+
+    public IReadOnlyList<GameObject> CurrentWaveGuests =>
+        currentWaveGuests;
+
+    public int ExpectedGuests { get; private set; }
+    public int ArrivedGuests { get; private set; }
+
+    public bool WaveSpawningComplete { get; private set; }
+    public bool IsWaveReadyForDecision { get; private set; }
+    public bool WaveDecisionMade { get; private set; }
+    public bool IsWaveAccepted { get; private set; }
+
+    // Ďalšia vlna sa odomkne až po cooldown-e aj po dokončení odchodu hostí.
+    private bool departureAnimationComplete;
+    private bool waveCooldownComplete;
 
     BuildingUpgradeManager upgrades;
     Button startButton;
 
-    void OnEnable() { StartWaveButton.WaveRequested += StartWave; }
-    void OnDisable() { StartWaveButton.WaveRequested -= StartWave; }
+    void OnEnable()
+    {
+        StartWaveButton.WaveRequested += StartWave;
+    }
+
+    void OnDisable()
+    {
+        StartWaveButton.WaveRequested -= StartWave;
+    }
 
     void Start()
     {
         upgrades = FindAnyObjectByType<BuildingUpgradeManager>();
+
         var swb = FindAnyObjectByType<StartWaveButton>();
-        if (swb != null) startButton = swb.GetComponent<Button>();
+
+        if (swb != null)
+            startButton = swb.GetComponent<Button>();
     }
+
+    // ----------------------------------------------------------------
+    // SPUSTENIE VLNY
+    // ----------------------------------------------------------------
 
     public void StartWave()
     {
@@ -100,9 +150,12 @@ public class GuestWaveManager : MonoBehaviour
             Debug.Log("Vlna už prebieha, počkaj, kým loď odpláva.");
             return;
         }
-        if (boats == null || boats.Length == 0 || dock == null || boatPath == null)
+
+        if (currentWaveGuests.Count > 0)
         {
-            Debug.LogWarning("GuestWaveManager: chýbajú lode alebo trasa (spusti Tools > Tropical Resort > Setup Guest Arrival).");
+            Debug.LogWarning(
+                "Pred spustením ďalšej vlny musí byť vyriešená aktuálna vlna hostí."
+            );
             return;
         }
 
@@ -112,9 +165,24 @@ public class GuestWaveManager : MonoBehaviour
         int boatIndex = Mathf.Clamp(resortLevel - 1, 0, boats.Length - 1);
         if (boats[boatIndex].model == null)
         {
-            Debug.LogWarning("GuestWaveManager: " + boats[boatIndex].label + " nemá priradený model.");
+            Debug.LogWarning(
+                "GuestWaveManager: " +
+                boats[boatIndex].label +
+                " nemá priradený model."
+            );
             return;
         }
+
+        // Príprava evidencie novej vlny.
+        currentWaveGuests.Clear();
+
+        ExpectedGuests = 0;
+        ArrivedGuests = 0;
+
+        WaveSpawningComplete = false;
+        IsWaveReadyForDecision = false;
+        WaveDecisionMade = false;
+        IsWaveAccepted = false;
 
         WaveNumber++;
         Debug.Log("FR-11 | Vlna " + WaveNumber + ": rezort Level " + resortLevel + " -> " + boats[boatIndex].label +
@@ -153,16 +221,25 @@ public class GuestWaveManager : MonoBehaviour
     IEnumerator RunWave(BoatLevel level)
     {
         WaveRunning = true;
-        if (startButton != null) startButton.interactable = false;
 
-        var boat = new GameObject("Boat (" + level.label + ")").transform;
+        if (startButton != null)
+            startButton.interactable = false;
+
+        var boat = new GameObject(
+            "Boat (" + level.label + ")"
+        ).transform;
+
         var model = Instantiate(level.model, boat, false);
-        model.transform.localPosition = Vector3.zero;
-        model.transform.localRotation = Quaternion.Euler(0f, boatYawOffset, 0f);
 
-        // Model má dĺžku v osi X a šírku v osi Z.
-        float halfLength = 1f, halfBeam = 0.4f;
+        model.transform.localPosition = Vector3.zero;
+        model.transform.localRotation =
+            Quaternion.Euler(0f, boatYawOffset, 0f);
+
+        float halfLength = 1f;
+        float halfBeam = 0.4f;
+
         var mf = model.GetComponentInChildren<MeshFilter>();
+
         if (mf != null && mf.sharedMesh != null)
         {
             var ext = mf.sharedMesh.bounds.extents;
@@ -170,171 +247,404 @@ public class GuestWaveManager : MonoBehaviour
             halfBeam = ext.z;
         }
 
-        // Predok sa zastaví na kotvisku, loď stojí bokom k mólu (dlhšia loď siaha ďalej dozadu).
-        Vector3 awayFromPier = Flat(dock.right) * (pierOnRightSide ? -1f : 1f);
-        Vector3 dockPos = dock.position - Flat(dock.forward) * halfLength + awayFromPier * (halfBeam + dockGap);
+        Vector3 awayFromPier =
+            Flat(dock.right) *
+            (pierOnRightSide ? -1f : 1f);
+
+        Vector3 dockPos =
+            dock.position
+            - Flat(dock.forward) * halfLength
+            + awayFromPier * (halfBeam + dockGap);
+
         var arrive = Children(boatPath);
         arrive.Add(dockPos);
 
         boat.position = arrive[0];
-        if (arrive.Count > 1) boat.rotation = Quaternion.LookRotation(Flat(arrive[1] - arrive[0]));
 
-        var bob = new BobState { model = model.transform };
+        if (arrive.Count > 1)
+        {
+            boat.rotation = Quaternion.LookRotation(
+                Flat(arrive[1] - arrive[0])
+            );
+        }
+
+        var bob = new BobState
+        {
+            model = model.transform
+        };
+
         yield return Sail(boat, bob, arrive, false, true);
 
-        // Zarovnať s mólom
+        // Zarovnanie lode s mólom.
         var dockRot = Quaternion.LookRotation(Flat(dock.forward));
+
         while (Quaternion.Angle(boat.rotation, dockRot) > 0.5f)
         {
-            boat.rotation = Quaternion.RotateTowards(boat.rotation, dockRot, boatTurnSpeed * Time.deltaTime);
+            boat.rotation = Quaternion.RotateTowards(
+                boat.rotation,
+                dockRot,
+                boatTurnSpeed * Time.deltaTime
+            );
+
             Bob(bob);
             yield return null;
         }
 
-        // Vystupovanie hostí
+        // Výpočet miesta vystupovania.
         var walk = Children(guestPath);
-        Vector3 target = walk.Count > 0 ? walk[0] : dock.position;
+
+        Vector3 target = walk.Count > 0
+            ? walk[0]
+            : dock.position;
+
         Vector3 f = boat.forward;
         Vector3 toTarget = target - boat.position;
-        float along = Mathf.Clamp(Vector3.Dot(toTarget, f), -(halfLength - 0.35f), halfLength - 0.35f);
-        Vector3 side = Flat(Vector3.ProjectOnPlane(toTarget, f));
-        Vector3 exit = boat.position + f * along + side * (halfBeam * 0.45f) + Vector3.up * level.deckHeight;
 
+        float along = Mathf.Clamp(
+            Vector3.Dot(toTarget, f),
+            -(halfLength - 0.35f),
+            halfLength - 0.35f
+        );
+
+        Vector3 side = Flat(
+            Vector3.ProjectOnPlane(toTarget, f)
+        );
+
+        Vector3 exit =
+            boat.position
+            + f * along
+            + side * (halfBeam * 0.45f)
+            + Vector3.up * level.deckHeight;
+
+        // Postupné vytváranie hostí.
         for (int i = 0; i < level.guestCount; i++)
         {
-            SpawnGuest(exit, walk);
+            GameObject guest = SpawnGuest(exit, walk);
+
+            if (guest != null)
+            {
+                currentWaveGuests.Add(guest);
+                ExpectedGuests++;
+            }
+
             float t = 0f;
-            while (t < guestSpawnInterval) { t += Time.deltaTime; Bob(bob); yield return null; }
+
+            while (t < guestSpawnInterval)
+            {
+                t += Time.deltaTime;
+                Bob(bob);
+                yield return null;
+            }
         }
 
+        // Loď ešte chvíľu čaká.
         float wait = 0f;
-        while (wait < 1.2f) { wait += Time.deltaTime; Bob(bob); yield return null; }
 
-        // Odchod: najprv cúvanie, potom dopredu preč z ostrova
+        while (wait < 1.2f)
+        {
+            wait += Time.deltaTime;
+            Bob(bob);
+            yield return null;
+        }
+
+        // Odchod lode.
         var leave = Children(boatLeavePath);
+
         if (leave.Count > 0)
         {
-            yield return Sail(boat, bob, new List<Vector3> { boat.position, leave[0] }, true, true);
+            yield return Sail(
+                boat,
+                bob,
+                new List<Vector3> { boat.position, leave[0] },
+                true,
+                true
+            );
+
             if (leave.Count > 1)
             {
                 leave[0] = boat.position;
-                yield return Sail(boat, bob, leave, false, false);
+
+                yield return Sail(
+                    boat,
+                    bob,
+                    leave,
+                    false,
+                    false
+                );
             }
         }
 
         Destroy(boat.gameObject);
-        if (startButton != null) startButton.interactable = true;
+
+        // Tlačidlo zostáva vypnuté až do dokončenia pobytu/odmietnutia,
+        // cooldownu a odchodovej animácie hostí.
         WaveRunning = false;
-        WaveFinished?.Invoke(); // loď odplávala (hostia môžu ešte kráčať k hotelu)
+
+        // Loď už dokončila vysádzanie.
+        WaveSpawningComplete = true;
+
+        Debug.Log(
+            "Loď odplávala. Vysadených hostí: " + ExpectedGuests
+        );
+
+        WaveFinished?.Invoke();
+
+        // Ak už všetci hostia dorazili, môžeme pripraviť rozhodnutie.
+        CheckWaveReady();
     }
 
-    class BobState { public Transform model; public float time; }
+    // ----------------------------------------------------------------
+    // LOĎ - POHYB
+    // ----------------------------------------------------------------
+
+    class BobState
+    {
+        public Transform model;
+        public float time;
+    }
 
     void Bob(BobState s)
     {
         s.time += Time.deltaTime;
-        s.model.localPosition = new Vector3(0f, Mathf.Sin(s.time * 1.7f) * 0.03f, 0f);
-        s.model.localRotation = Quaternion.Euler(Mathf.Sin(s.time * 1.3f) * 1.5f, boatYawOffset, Mathf.Sin(s.time * 1.1f) * 2f);
+
+        s.model.localPosition = new Vector3(
+            0f,
+            Mathf.Sin(s.time * 1.7f) * 0.03f,
+            0f
+        );
+
+        s.model.localRotation = Quaternion.Euler(
+            Mathf.Sin(s.time * 1.3f) * 1.5f,
+            boatYawOffset,
+            Mathf.Sin(s.time * 1.1f) * 2f
+        );
     }
 
-    // Plavba po lomenej čiare. reverse = loď ide dozadu (cúva). slowDown = spomaľuje pred posledným bodom.
-    IEnumerator Sail(Transform boat, BobState bob, List<Vector3> points, bool reverse, bool slowDown)
+    IEnumerator Sail(
+        Transform boat,
+        BobState bob,
+        List<Vector3> points,
+        bool reverse,
+        bool slowDown
+    )
     {
         float total = 0f;
-        for (int i = 1; i < points.Count; i++) total += Vector3.Distance(points[i - 1], points[i]);
+
+        for (int i = 1; i < points.Count; i++)
+        {
+            total += Vector3.Distance(
+                points[i - 1],
+                points[i]
+            );
+        }
+
         float travelled = 0f;
 
         for (int i = 1; i < points.Count; i++)
         {
-            Vector3 a = points[i - 1], b = points[i];
+            Vector3 a = points[i - 1];
+            Vector3 b = points[i];
+
             float len = Vector3.Distance(a, b);
             float d = 0f;
+
             Vector3 dir = Flat(b - a);
-            if (reverse) dir = -dir;
+
+            if (reverse)
+                dir = -dir;
 
             while (d < len)
             {
                 float remaining = total - travelled - d;
-                float speed = reverse ? boatSpeed * 0.35f : boatSpeed;
-                if (slowDown) speed *= Mathf.Clamp(remaining / 3f, 0.2f, 1f);
-                if (reverse) speed *= Mathf.Clamp((travelled + d) / 1f + 0.3f, 0.3f, 1f);
 
-                d = Mathf.Min(len, d + speed * Time.deltaTime);
-                boat.position = Vector3.Lerp(a, b, d / len);
+                float speed = reverse
+                    ? boatSpeed * 0.35f
+                    : boatSpeed;
+
+                if (slowDown)
+                    speed *= Mathf.Clamp(
+                        remaining / 3f,
+                        0.2f,
+                        1f
+                    );
+
+                if (reverse)
+                {
+                    speed *= Mathf.Clamp(
+                        (travelled + d) / 1f + 0.3f,
+                        0.3f,
+                        1f
+                    );
+                }
+
+                d = Mathf.Min(
+                    len,
+                    d + speed * Time.deltaTime
+                );
+
+                boat.position = Vector3.Lerp(
+                    a,
+                    b,
+                    d / len
+                );
+
                 if (dir.sqrMagnitude > 0.0001f)
-                    boat.rotation = Quaternion.RotateTowards(boat.rotation, Quaternion.LookRotation(dir), boatTurnSpeed * Time.deltaTime);
+                {
+                    boat.rotation = Quaternion.RotateTowards(
+                        boat.rotation,
+                        Quaternion.LookRotation(dir),
+                        boatTurnSpeed * Time.deltaTime
+                    );
+                }
+
                 Bob(bob);
                 yield return null;
             }
+
             travelled += len;
         }
     }
 
-    // ---------------------------------------------------------------- hostia
+    // ----------------------------------------------------------------
+    // VYTVORENIE HOSŤA
+    // ----------------------------------------------------------------
 
-    void SpawnGuest(Vector3 start, List<Vector3> path)
+    GameObject SpawnGuest(Vector3 start, List<Vector3> path)
     {
-        if (guestModels == null || guestModels.Length == 0) return;
-        var gm = guestModels[UnityEngine.Random.Range(0, guestModels.Length)];
-        if (gm == null || gm.model == null) return;
+        if (guestModels == null || guestModels.Length == 0)
+            return null;
+
+        var gm = guestModels[
+            UnityEngine.Random.Range(0, guestModels.Length)
+        ];
+
+        if (gm == null || gm.model == null)
+            return null;
 
         var guest = BuildGuest(gm);
+
         guest.transform.position = start;
+
         if (path.Count > 0)
         {
             var dir = Flat(path[0] - start);
-            if (dir.sqrMagnitude > 0.0001f) guest.transform.rotation = Quaternion.LookRotation(dir);
+
+            if (dir.sqrMagnitude > 0.0001f)
+            {
+                guest.transform.rotation =
+                    Quaternion.LookRotation(dir);
+            }
         }
+
         guest.SetActive(true);
+
         StartCoroutine(WalkGuest(guest, start, path));
+
+        return guest;
     }
 
     GameObject BuildGuest(GuestModel gm)
     {
-        var root = new GameObject("Guest_" + gm.model.name);
-        root.SetActive(false); // CharacterAnimator.Awake beží až po nastavení kĺbov
+        var root = new GameObject(
+            "Guest_" + gm.model.name
+        );
 
-        var model = Instantiate(gm.model, root.transform, false);
+        root.SetActive(false);
+
+        var model = Instantiate(
+            gm.model,
+            root.transform,
+            false
+        );
+
         model.name = "Model";
+
         model.transform.localPosition = Vector3.zero;
         model.transform.localRotation = Quaternion.identity;
 
         var anim = root.AddComponent<CharacterAnimator>();
+
         anim.body = model.transform;
         anim.speed = 1.3f;
+
+        // Každý hosť má vlastnú evidenciu potrieb.
+        root.AddComponent<GuestNeeds>();
+        root.AddComponent<GuestNeedsGenerator>();
 
         if (gm.rig != null)
         {
             foreach (var raw in gm.rig.text.Split('\n'))
             {
                 var p = raw.Trim().Split(' ');
-                if (p.Length < 4) continue;
-                if (!float.TryParse(p[1], NumberStyles.Float, CultureInfo.InvariantCulture, out float x)) continue;
-                if (!float.TryParse(p[2], NumberStyles.Float, CultureInfo.InvariantCulture, out float y)) continue;
-                if (!float.TryParse(p[3], NumberStyles.Float, CultureInfo.InvariantCulture, out float z)) continue;
+
+                if (p.Length < 4)
+                    continue;
+
+                if (!float.TryParse(
+                    p[1],
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out float x))
+                    continue;
+
+                if (!float.TryParse(
+                    p[2],
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out float y))
+                    continue;
+
+                if (!float.TryParse(
+                    p[3],
+                    NumberStyles.Float,
+                    CultureInfo.InvariantCulture,
+                    out float z))
+                    continue;
 
                 var part = FindDeep(model.transform, p[0]);
-                if (part == null) continue;
 
-                // Unity pri importe OBJ zrkadlí os X (rovnako ako CharactersSetup)
-                var pivot = new GameObject(p[0] + "_Pivot").transform;
+                if (part == null)
+                    continue;
+
+                var pivot = new GameObject(
+                    p[0] + "_Pivot"
+                ).transform;
+
                 pivot.SetParent(model.transform, false);
                 pivot.localPosition = new Vector3(-x, y, z);
+
                 part.SetParent(pivot, true);
 
                 switch (p[0])
                 {
-                    case "Head": anim.head = pivot; break;
-                    case "ArmL": anim.armL = pivot; break;
-                    case "ArmR": anim.armR = pivot; break;
-                    case "LegL": anim.legL = pivot; break;
-                    case "LegR": anim.legR = pivot; break;
+                    case "Head":
+                        anim.head = pivot;
+                        break;
+
+                    case "ArmL":
+                        anim.armL = pivot;
+                        break;
+
+                    case "ArmR":
+                        anim.armR = pivot;
+                        break;
+
+                    case "LegL":
+                        anim.legL = pivot;
+                        break;
+
+                    case "LegR":
+                        anim.legR = pivot;
+                        break;
                 }
             }
         }
 
         anim.state = CharState.Walk;
-        root.transform.localScale = Vector3.one * guestScale;
+
+        root.transform.localScale =
+            Vector3.one * guestScale;
+
         return root;
     }
 
@@ -342,72 +652,322 @@ public class GuestWaveManager : MonoBehaviour
     {
         foreach (Transform c in t)
         {
-            if (c.name == name || c.name.EndsWith("_" + name)) return c;
+            if (c.name == name || c.name.EndsWith("_" + name))
+                return c;
+
             var r = FindDeep(c, name);
-            if (r != null) return r;
+
+            if (r != null)
+                return r;
         }
+
         return null;
     }
 
-    IEnumerator WalkGuest(GameObject guest, Vector3 start, List<Vector3> path)
+    // ----------------------------------------------------------------
+    // POHYB HOSŤA A UBYTOVANIE
+    // ----------------------------------------------------------------
+
+    IEnumerator WalkGuest(
+        GameObject guest,
+        Vector3 start,
+        List<Vector3> path
+    )
     {
         var anim = guest.GetComponent<CharacterAnimator>();
-        float offset = UnityEngine.Random.Range(-0.08f, 0.08f); // aby nešli všetci v jednej čiare (malý posun, aby neobtierali stĺpiky)
-        float speed = guestSpeed * UnityEngine.Random.Range(0.9f, 1.1f);
-        float scale = guest.transform.localScale.x;
+
+        var needsGenerator =
+            guest.GetComponent<GuestNeedsGenerator>();
+
+        float offset = UnityEngine.Random.Range(-0.08f, 0.08f);
+
+        float speed =
+            guestSpeed * UnityEngine.Random.Range(0.9f, 1.1f);
 
         var points = new List<Vector3> { start };
-        for (int i = 0; i < path.Count; i++) points.Add(Offset(path, i, offset));
+
+        for (int i = 0; i < path.Count; i++)
+        {
+            points.Add(Offset(path, i, offset));
+        }
 
         for (int i = 1; i < points.Count; i++)
-            yield return WalkSegment(guest.transform, points[i - 1], points[i], speed);
+        {
+            yield return WalkSegment(
+                guest.transform,
+                points[i - 1],
+                points[i],
+                speed
+            );
+        }
 
-        // Posledné kroky podľa aktuálneho hotela (po upgrade je to nový model na rovnakom mieste)
-        var hotel = upgrades != null ? upgrades.GetBuilding(hotelLabel) : null;
+        var hotel = upgrades != null
+            ? upgrades.GetBuilding(hotelLabel)
+            : null;
+
         if (hotel != null)
         {
             var h = hotel.transform;
+
             Vector3 from = guest.transform.position;
             Vector3 entry = h.TransformPoint(hotelEntryLocal);
             Vector3 front = h.TransformPoint(hotelFrontLocal);
             Vector3 door = h.TransformPoint(hotelDoorLocal);
 
-            yield return WalkSegment(guest.transform, from, entry, speed);
-            yield return WalkSegment(guest.transform, entry, front, speed);
+            yield return WalkSegment(
+                guest.transform,
+                from,
+                entry,
+                speed
+            );
 
-            // vojde do dverí a zmenší sa
-            float len = Mathf.Max(0.01f, Vector3.Distance(front, door));
-            float d = 0f;
-            Face(guest.transform, door - front);
-            while (d < len)
-            {
-                d = Mathf.Min(len, d + speed * Time.deltaTime);
-                float k = d / len;
-                guest.transform.position = Vector3.Lerp(front, door, k);
-                guest.transform.localScale = Vector3.one * scale * (1f - k);
-                yield return null;
-            }
+            yield return WalkSegment(
+                guest.transform,
+                entry,
+                front,
+                speed
+            );
+
+            yield return WalkSegment(
+                guest.transform,
+                front,
+                door,
+                speed
+            );
+
+            Vector3 stayOffset = new Vector3(
+                UnityEngine.Random.Range(
+                    -hotelGuestSpacing,
+                    hotelGuestSpacing
+                ),
+                0f,
+                UnityEngine.Random.Range(
+                    -hotelGuestSpacing,
+                    hotelGuestSpacing
+                )
+            );
+
+            guest.transform.position = door + stayOffset;
+
+            if (anim != null)
+                anim.state = CharState.Happy;
+
+            if (needsGenerator != null)
+                needsGenerator.StartGenerating();
+
+            Debug.Log(
+                guest.name + " je ubytovaný v rezorte."
+            );
         }
         else
         {
-            anim.state = CharState.Happy;
-            yield return new WaitForSeconds(0.6f);
+            Debug.LogWarning(
+                "GuestWaveManager: Hotel sa nenašiel. Hosť zostáva na poslednom bode trasy."
+            );
+
+            if (anim != null)
+                anim.state = CharState.Happy;
         }
 
-        Destroy(guest);
-        GuestArrived?.Invoke();
+        // Označíme hosťa ako dorazeného.
+        RegisterGuestArrival();
     }
 
-    IEnumerator WalkSegment(Transform guest, Vector3 a, Vector3 b, float speed)
+    // ----------------------------------------------------------------
+    // EVIDENCIA PRÍCHODU HOSTÍ
+    // ----------------------------------------------------------------
+
+    void RegisterGuestArrival()
+    {
+        ArrivedGuests++;
+
+        Debug.Log(
+            "Dorazili hostia: " +
+            ArrivedGuests +
+            " / " +
+            ExpectedGuests
+        );
+
+        GuestArrived?.Invoke();
+
+        CheckWaveReady();
+    }
+
+    void CheckWaveReady()
+    {
+        if (IsWaveReadyForDecision)
+            return;
+
+        if (!WaveSpawningComplete)
+            return;
+
+        if (ExpectedGuests <= 0)
+        {
+            Debug.LogWarning(
+                "Vlna neobsahuje žiadnych vytvorených hostí."
+            );
+            return;
+        }
+
+        if (ArrivedGuests < ExpectedGuests)
+            return;
+
+        IsWaveReadyForDecision = true;
+
+        Debug.Log(
+            "VLNA PRIPRAVENÁ NA ROZHODNUTIE! " +
+            ArrivedGuests +
+            " hostí čaká na prijatie alebo odmietnutie."
+        );
+
+        WaveReadyForDecision?.Invoke(CurrentWaveGuests);
+    }
+
+    // ----------------------------------------------------------------
+    // ROZHODNUTIE O VLNE A UKONČENIE POBYTU
+    // ----------------------------------------------------------------
+
+    // Zavolá UI po kliknutí na ACCEPT ALL.
+    public bool AcceptCurrentWave()
+    {
+        if (!IsWaveReadyForDecision || WaveDecisionMade ||
+            currentWaveGuests.Count == 0)
+        {
+            Debug.LogWarning("Aktuálnu vlnu nie je možné prijať.");
+            return false;
+        }
+
+        WaveDecisionMade = true;
+        IsWaveAccepted = true;
+
+        Debug.Log("Hráč prijal celú vlnu hostí.");
+        WaveAccepted?.Invoke(CurrentWaveGuests);
+        return true;
+    }
+
+    // Zavolá UI po kliknutí na REJECT ALL. Hostí zámerne nemažeme
+    // ani neteleportujeme; ich odchod zabezpečí samostatná animácia.
+    public bool RejectCurrentWave()
+    {
+        if (!IsWaveReadyForDecision || WaveDecisionMade ||
+            currentWaveGuests.Count == 0)
+        {
+            Debug.LogWarning("Aktuálnu vlnu nie je možné odmietnuť.");
+            return false;
+        }
+
+        WaveDecisionMade = true;
+        IsWaveAccepted = false;
+
+        Debug.Log("Hráč odmietol celú vlnu hostí.");
+        WaveRejected?.Invoke(CurrentWaveGuests);
+        return true;
+    }
+
+    // GuestWaveUI zavolá túto metódu po skončení časovača pobytu.
+    // Filipov skript sa môže prihlásiť na GuestStayFinished a spustiť odchod.
+    public void NotifyGuestStayFinished()
+    {
+        if (!WaveDecisionMade || !IsWaveAccepted)
+        {
+            Debug.LogWarning(
+                "Koniec pobytu možno vyvolať iba pri prijatej vlne."
+            );
+            return;
+        }
+
+        Debug.Log("Čas pobytu hostí sa skončil.");
+        GuestStayFinished?.Invoke(CurrentWaveGuests);
+    }
+
+    // Filip zavolá túto metódu až po dokončení odchodovej animácie.
+    // Samotné dokončenie animácie ešte neodomkne ďalšiu vlnu,
+    // pokiaľ zároveň neskončil dvojminútový cooldown.
+    public void CompleteCurrentWave()
+    {
+        if (!WaveDecisionMade)
+        {
+            Debug.LogWarning(
+                "Vlna sa nedá dokončiť bez rozhodnutia hráča."
+            );
+            return;
+        }
+
+        departureAnimationComplete = true;
+        TryCompleteWaveCycle();
+    }
+
+    // GuestWaveUI zavolá túto metódu po skončení dvojminútového cooldownu.
+    public void CompleteWaveCooldown()
+    {
+        if (!WaveDecisionMade)
+        {
+            Debug.LogWarning(
+                "Cooldown nemožno dokončiť bez rozhodnutia o vlne."
+            );
+            return;
+        }
+
+        waveCooldownComplete = true;
+        TryCompleteWaveCycle();
+    }
+
+    private void TryCompleteWaveCycle()
+    {
+        if (!departureAnimationComplete || !waveCooldownComplete)
+            return;
+
+        currentWaveGuests.Clear();
+        ExpectedGuests = 0;
+        ArrivedGuests = 0;
+        WaveSpawningComplete = false;
+        IsWaveReadyForDecision = false;
+        WaveDecisionMade = false;
+        IsWaveAccepted = false;
+        departureAnimationComplete = false;
+        waveCooldownComplete = false;
+
+        if (startButton != null)
+            startButton.interactable = true;
+
+        Debug.Log(
+            "Vlna aj cooldown sú dokončené. Je možné spustiť ďalšiu vlnu."
+        );
+    }
+
+    // ----------------------------------------------------------------
+    // POHYB A POMOCNÉ METÓDY
+    // ----------------------------------------------------------------
+
+    IEnumerator WalkSegment(
+        Transform guest,
+        Vector3 a,
+        Vector3 b,
+        float speed
+    )
     {
         float len = Vector3.Distance(a, b);
-        if (len < 0.001f) yield break;
+
+        if (len < 0.001f)
+            yield break;
+
         Face(guest, b - a);
+
         float d = 0f;
+
         while (d < len)
         {
-            d = Mathf.Min(len, d + speed * Time.deltaTime);
-            guest.position = Vector3.Lerp(a, b, d / len);
+            d = Mathf.Min(
+                len,
+                d + speed * Time.deltaTime
+            );
+
+            guest.position = Vector3.Lerp(
+                a,
+                b,
+                d / len
+            );
+
             yield return null;
         }
     }
@@ -415,65 +975,139 @@ public class GuestWaveManager : MonoBehaviour
     static void Face(Transform t, Vector3 dir)
     {
         dir = Flat(dir);
-        if (dir.sqrMagnitude > 0.0001f) t.rotation = Quaternion.LookRotation(dir);
+
+        if (dir.sqrMagnitude > 0.0001f)
+            t.rotation = Quaternion.LookRotation(dir);
     }
 
-    // Bod trasy posunutý bokom (kolmo na smer cesty).
-    static Vector3 Offset(List<Vector3> path, int i, float amount)
+    static Vector3 Offset(
+        List<Vector3> path,
+        int i,
+        float amount
+    )
     {
-        if (path.Count < 2) return path[i];
-        Vector3 prev = path[Mathf.Max(0, i - 1)], next = path[Mathf.Min(path.Count - 1, i + 1)];
+        if (path.Count < 2)
+            return path[i];
+
+        Vector3 prev = path[Mathf.Max(0, i - 1)];
+
+        Vector3 next = path[
+            Mathf.Min(path.Count - 1, i + 1)
+        ];
+
         Vector3 dir = Flat(next - prev);
-        if (dir.sqrMagnitude < 0.0001f) return path[i];
-        Vector3 side = new Vector3(dir.z, 0f, -dir.x);
+
+        if (dir.sqrMagnitude < 0.0001f)
+            return path[i];
+
+        Vector3 side = new Vector3(
+            dir.z,
+            0f,
+            -dir.x
+        );
+
         return path[i] + side * amount;
     }
-
-    // ---------------------------------------------------------------- pomocné
 
     static Vector3 Flat(Vector3 v)
     {
         v.y = 0f;
-        return v.sqrMagnitude > 0.000001f ? v.normalized : Vector3.zero;
+
+        return v.sqrMagnitude > 0.000001f
+            ? v.normalized
+            : Vector3.zero;
     }
 
     static List<Vector3> Children(Transform parent)
     {
         var list = new List<Vector3>();
-        if (parent == null) return list;
-        foreach (Transform c in parent) list.Add(c.position);
+
+        if (parent == null)
+            return list;
+
+        foreach (Transform c in parent)
+            list.Add(c.position);
+
         return list;
     }
 
+    // ----------------------------------------------------------------
+    // GIZMOS
+    // ----------------------------------------------------------------
+
     void OnDrawGizmos()
     {
-        DrawPath(boatPath, new Color(0.2f, 0.6f, 1f), dock);
-        DrawPath(boatLeavePath, new Color(1f, 0.55f, 0.1f), null);
-        DrawPath(guestPath, new Color(0.25f, 0.9f, 0.3f), null);
+        DrawPath(
+            boatPath,
+            new Color(0.2f, 0.6f, 1f),
+            dock
+        );
+
+        DrawPath(
+            boatLeavePath,
+            new Color(1f, 0.55f, 0.1f),
+            null
+        );
+
+        DrawPath(
+            guestPath,
+            new Color(0.25f, 0.9f, 0.3f),
+            null
+        );
+
         if (dock != null)
         {
-            // červená guľa = kde zastaví predok lode, červená čiara = smer lode,
-            // žltá čiara = strana, na ktorej loď stojí (od móla)
             Gizmos.color = Color.red;
-            Gizmos.DrawWireSphere(dock.position, 0.3f);
-            Gizmos.DrawLine(dock.position, dock.position + dock.forward * 1.5f);
-            Gizmos.DrawLine(dock.position, dock.position - dock.forward * 2.5f);
+
+            Gizmos.DrawWireSphere(
+                dock.position,
+                0.3f
+            );
+
+            Gizmos.DrawLine(
+                dock.position,
+                dock.position + dock.forward * 1.5f
+            );
+
+            Gizmos.DrawLine(
+                dock.position,
+                dock.position - dock.forward * 2.5f
+            );
+
             Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(dock.position, dock.position + dock.right * (pierOnRightSide ? -1f : 1f));
+
+            Gizmos.DrawLine(
+                dock.position,
+                dock.position + dock.right *
+                (pierOnRightSide ? -1f : 1f)
+            );
         }
     }
 
-    static void DrawPath(Transform parent, Color color, Transform end)
+    static void DrawPath(
+        Transform parent,
+        Color color,
+        Transform end
+    )
     {
-        if (parent == null) return;
+        if (parent == null)
+            return;
+
         Gizmos.color = color;
+
         Vector3? prev = null;
+
         foreach (Transform c in parent)
         {
             Gizmos.DrawSphere(c.position, 0.12f);
-            if (prev.HasValue) Gizmos.DrawLine(prev.Value, c.position);
+
+            if (prev.HasValue)
+                Gizmos.DrawLine(prev.Value, c.position);
+
             prev = c.position;
         }
-        if (end != null && prev.HasValue) Gizmos.DrawLine(prev.Value, end.position);
+
+        if (end != null && prev.HasValue)
+            Gizmos.DrawLine(prev.Value, end.position);
     }
 }

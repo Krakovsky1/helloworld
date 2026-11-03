@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+﻿
+using UnityEngine;
 using UnityEditor;
 using System.IO;
-using Unity.Scripting.LifecycleManagement;
 using UnityEngine.UIElements;
 
 [CustomEditor(typeof(Readme))]
@@ -10,7 +10,7 @@ sealed partial class ReadmeEditor : Editor
     const string k_ShowedReadmeSessionStateName = "ReadmeEditor.showedReadme";
     const string k_ReadmeSourceDirectory = "Assets/TutorialInfo";
 
-    [OnCodeLoaded]
+    [InitializeOnLoadMethod]
     static void OnCodeLoaded()
         => EditorApplication.delayCall += SelectReadmeAutomatically;
 
@@ -26,6 +26,7 @@ sealed partial class ReadmeEditor : Editor
     static Readme SelectReadme()
     {
         var ids = AssetDatabase.FindAssetGUIDs("Readme t:Readme");
+
         if (ids.Length != 1)
         {
             Debug.LogWarning("Couldn't find a readme");
@@ -39,10 +40,11 @@ sealed partial class ReadmeEditor : Editor
 
     static void RemoveTutorial()
     {
-        if (EditorUtility.DisplayDialog("Remove Readme Assets",
-                                        $"All contents under {k_ReadmeSourceDirectory} will be removed, are you sure you want to proceed?",
-                                        "Proceed",
-                                        "Cancel"))
+        if (EditorUtility.DisplayDialog(
+            "Remove Readme Assets",
+            $"All contents under {k_ReadmeSourceDirectory} will be removed, are you sure you want to proceed?",
+            "Proceed",
+            "Cancel"))
         {
             if (Directory.Exists(k_ReadmeSourceDirectory))
                 AssetDatabase.DeleteAsset(k_ReadmeSourceDirectory);
@@ -50,6 +52,7 @@ sealed partial class ReadmeEditor : Editor
                 Debug.LogWarning($"Could not find the Readme folder at {k_ReadmeSourceDirectory}");
 
             var readmeAsset = SelectReadme();
+
             if (readmeAsset != null)
             {
                 var path = AssetDatabase.GetAssetPath(readmeAsset);
@@ -66,7 +69,8 @@ sealed partial class ReadmeEditor : Editor
 
         VisualElement root = new();
         root.styleSheets.Add(readme.commonStyle);
-        root.styleSheets.Add(EditorGUIUtility.isProSkin ? readme.darkStyle : readme.lightStyle);
+        root.styleSheets.Add(
+            EditorGUIUtility.isProSkin ? readme.darkStyle : readme.lightStyle);
 
         VisualElement ChainWithClass(VisualElement created, string className)
         {
@@ -74,14 +78,14 @@ sealed partial class ReadmeEditor : Editor
             return created;
         }
 
-        //Header
+        // Header
         VisualElement title = new();
         title.AddToClassList("title");
         title.Add(ChainWithClass(new Image { image = readme.icon }, "title__icon"));
         title.Add(ChainWithClass(new Label(readme.title), "title__text"));
         root.Add(title);
 
-        //Content
+        // Content
         foreach (var section in readme.sections)
         {
             VisualElement part = new();
@@ -96,14 +100,22 @@ sealed partial class ReadmeEditor : Editor
             if (!string.IsNullOrEmpty(section.linkText))
             {
                 var link = ChainWithClass(new Label(section.linkText), "section__link");
-                link.RegisterCallback<ClickEvent, string>((_, url) => Application.OpenURL(url), section.url);
+
+                link.RegisterCallback<ClickEvent, string>(
+                    (_, url) => Application.OpenURL(url),
+                    section.url);
+
                 part.Add(link);
             }
 
             root.Add(part);
         }
 
-        var button = new Button(RemoveTutorial) { text = "Remove Readme Assets" };
+        var button = new Button(RemoveTutorial)
+        {
+            text = "Remove Readme Assets"
+        };
+
         button.AddToClassList("remove-readme-button");
         root.Add(button);
 
