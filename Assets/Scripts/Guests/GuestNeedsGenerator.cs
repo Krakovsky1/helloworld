@@ -24,8 +24,8 @@ public class GuestNeedsGenerator : MonoBehaviour
         guestNeeds = GetComponent<GuestNeeds>();
     }
 
-    // Volá sa a v momente, keï je hos ubytovanı.
-    // Generátor sa nespúša automaticky pri vytvorení hosa na móle.
+    // VolÃ¡ sa aÅ¾ v momente, keÄ je hosÅ¥ ubytovanÃ½.
+    // GenerÃ¡tor sa nespÃºÅ¡Å¥a automaticky pri vytvorenÃ­ hosÅ¥a na mÃ³le.
     public void StartGenerating()
     {
         if (generationRoutine != null)
@@ -65,7 +65,7 @@ public class GuestNeedsGenerator : MonoBehaviour
         int randomIndex = Random.Range(0, availableNeeds.Length);
         GuestNeedType selectedNeed = availableNeeds[randomIndex];
 
-        // Opakovanie rovnakého typu potreby je povolené.
+        // Opakovanie rovnakÃ©ho typu potreby je povolenÃ©.
         guestNeeds.AddNeed(selectedNeed);
     }
 

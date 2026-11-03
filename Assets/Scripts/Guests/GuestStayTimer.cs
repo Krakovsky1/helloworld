@@ -46,7 +46,7 @@ public class GuestStayTimer : MonoBehaviour
     {
         if (timerText == null)
         {
-            Debug.LogError("GuestStayTimer: Timer Text nie je priraden˝!");
+            Debug.LogError("GuestStayTimer: Timer Text nie je priraden√Ω!");
             return;
         }
 
@@ -89,7 +89,7 @@ public class GuestStayTimer : MonoBehaviour
 
         if (isCooldown)
         {
-            Debug.Log("Cooldown do Ôalöej vlny sa skonËil.");
+            Debug.Log("Cooldown do ƒèal≈°ej vlny sa skonƒçil.");
             CooldownFinished?.Invoke();
         }
         else
