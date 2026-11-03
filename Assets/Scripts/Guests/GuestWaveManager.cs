@@ -6,7 +6,8 @@ using UnityEngine;
 using UnityEngine.UI;
 
 // Vlna hostí: po stlačení START WAVE pripláva k mólu loď, hostia vystúpia a prejdú do hotela.
-// Loď sa vyberá podľa úrovne hotela (BuildingUpgradeManager): Level 1 -> loď 1, Level 2-3 -> loď 2, MAX -> loď 3.
+// FR-11: loď a počet hostí závisia od úrovne celého rezortu.
+// Úroveň rezortu = najnižšia úroveň hotela, reštaurácie a baru (max. Level 3 pri súčasných budovách).
 //
 // Trasy sú poskladané z detí objektov v scéne (dajú sa posúvať v editore, v Scene view sú vidieť ako čiary):
 //   boatPath      - body, cez ktoré loď pripláva (posledný bod má byť pred kotviskom, v smere príchodu)
@@ -38,8 +39,9 @@ public class GuestWaveManager : MonoBehaviour
 
     [Header("Lode")]
     [SerializeField] BoatLevel[] boats;
-    [Tooltip("Ktorá loď (index v Boats) príde pre danú úroveň hotela: prvok 0 = hotel Level 1, prvok 1 = Level 2, ...")]
-    [SerializeField] int[] boatForHotelLevel = { 0, 1, 1, 2 };
+    // Staré pole ponechávame pre kompatibilitu s GuestArrivalSetup a existujúcou scénou.
+    // FR-11 ho už nepoužíva; namiesto neho platí poradie lodí L1, L2, L3 v poli Boats.
+    [SerializeField, HideInInspector] int[] boatForHotelLevel = { 0, 1, 1, 2 };
     [SerializeField] float boatSpeed = 4f;
     [Tooltip("Ako rýchlo sa loď otáča (stupne za sekundu)")]
     [SerializeField] float boatTurnSpeed = 70f;
@@ -104,11 +106,10 @@ public class GuestWaveManager : MonoBehaviour
             return;
         }
 
-        int hotelLevel = upgrades != null ? Mathf.Max(1, upgrades.GetLevel(hotelLabel)) : 1;
-        int boatIndex = boatForHotelLevel != null && boatForHotelLevel.Length > 0
-            ? boatForHotelLevel[Mathf.Clamp(hotelLevel - 1, 0, boatForHotelLevel.Length - 1)]
-            : 0;
-        boatIndex = Mathf.Clamp(boatIndex, 0, boats.Length - 1);
+        // FR-11: úroveň rezortu odvodíme od všetkých troch budov.
+        // Opakovaná vlna na rovnakej úrovni prinesie rovnaký počet hostí.
+        int resortLevel = GetResortLevel();
+        int boatIndex = Mathf.Clamp(resortLevel - 1, 0, boats.Length - 1);
         if (boats[boatIndex].model == null)
         {
             Debug.LogWarning("GuestWaveManager: " + boats[boatIndex].label + " nemá priradený model.");
@@ -116,9 +117,35 @@ public class GuestWaveManager : MonoBehaviour
         }
 
         WaveNumber++;
-        Debug.Log("Vlna " + WaveNumber + ": hotel Level " + hotelLevel + " -> " + boats[boatIndex].label +
+        Debug.Log("FR-11 | Vlna " + WaveNumber + ": rezort Level " + resortLevel + " -> " + boats[boatIndex].label +
                   " (" + boats[boatIndex].guestCount + " hostí)");
         StartCoroutine(RunWave(boats[boatIndex]));
+    }
+
+    // Úroveň rezortu je najnižšia zo súčasných úrovní hotela, reštaurácie a baru.
+    // Ak niektorá budova/manažér chýba, zatiaľ použijeme Level 1.
+    public int GetResortLevel()
+    {
+        if (upgrades == null)
+            upgrades = FindAnyObjectByType<BuildingUpgradeManager>();
+
+        if (upgrades == null)
+        {
+            Debug.LogWarning("FR-11: BuildingUpgradeManager sa nenašiel; používam rezort Level 1.");
+            return 1;
+        }
+
+        int hotel = upgrades.GetLevel(hotelLabel);
+        int restaurant = upgrades.GetLevel("Restaurant");
+        int bar = upgrades.GetLevel("Bar");
+
+        if (hotel < 1 || restaurant < 1 || bar < 1)
+        {
+            Debug.LogWarning("FR-11: Hotel/Restaurant/Bar sa nenašiel; používam rezort Level 1.");
+            return 1;
+        }
+
+        return Mathf.Min(hotel, restaurant, bar);
     }
 
     // ---------------------------------------------------------------- loď
