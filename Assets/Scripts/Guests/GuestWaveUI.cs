@@ -1,16 +1,28 @@
+
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 
 public class GuestWaveUI : MonoBehaviour
 {
-    [Header("References")]
+    [Header("Wave References")]
     [SerializeField] private GuestWaveManager waveManager;
     [SerializeField] private GuestStayTimer guestStayTimer;
     [SerializeField] private GameObject panel;
     [SerializeField] private Transform guestList;
     [SerializeField] private GameObject guestRowTemplate;
     [SerializeField] private TMP_Text guestCountText;
+
+    [Header("Reward References")]
+    [SerializeField] private WaveRewardManager rewardManager;
+    [SerializeField] private GameObject rewardPanel;
+    [SerializeField] private TMP_Text roomRewardText;
+    [SerializeField] private TMP_Text relaxRewardText;
+    [SerializeField] private TMP_Text foodRewardText;
+    [SerializeField] private TMP_Text drinkRewardText;
+    [SerializeField] private TMP_Text totalCoinsText;
+    [SerializeField] private TMP_Text totalEnergyText;
+    [SerializeField] private TMP_Text totalResortValueText;
 
     [Header("Cooldown")]
     [SerializeField] private float cooldownDuration = 120f;
@@ -26,6 +38,9 @@ public class GuestWaveUI : MonoBehaviour
         if (panel != null)
             panel.SetActive(false);
 
+        if (rewardPanel != null)
+            rewardPanel.SetActive(false);
+
         if (guestRowTemplate != null)
             guestRowTemplate.SetActive(false);
     }
@@ -33,7 +48,14 @@ public class GuestWaveUI : MonoBehaviour
     private void OnEnable()
     {
         if (waveManager != null)
+        {
             waveManager.WaveReadyForDecision += ShowWave;
+        }
+
+        if (rewardManager != null)
+        {
+            rewardManager.RewardsBecameReady += OnDepartureFinished;
+        }
 
         if (guestStayTimer != null)
         {
@@ -45,7 +67,14 @@ public class GuestWaveUI : MonoBehaviour
     private void OnDisable()
     {
         if (waveManager != null)
+        {
             waveManager.WaveReadyForDecision -= ShowWave;
+        }
+
+        if (rewardManager != null)
+        {
+            rewardManager.RewardsBecameReady -= OnDepartureFinished;
+        }
 
         if (guestStayTimer != null)
         {
@@ -65,6 +94,9 @@ public class GuestWaveUI : MonoBehaviour
 
         if (panel != null)
             panel.SetActive(true);
+
+        if (rewardPanel != null)
+            rewardPanel.SetActive(false);
 
         if (guestCountText != null)
             guestCountText.text = guests.Count + " GUESTS";
@@ -102,13 +134,11 @@ public class GuestWaveUI : MonoBehaviour
             return;
         }
 
-        // Najprv overíme, či manager prijatie povolí.
         if (!waveManager.AcceptCurrentWave())
             return;
 
         waveDecisionMade = true;
 
-        // Spustenie času pobytu hostí.
         guestStayTimer.StartTimer(currentWaveGuestCount);
 
         if (panel != null)
@@ -138,7 +168,6 @@ public class GuestWaveUI : MonoBehaviour
             return;
         }
 
-        // Odmietnutie celej vlny.
         if (!waveManager.RejectCurrentWave())
             return;
 
@@ -147,11 +176,11 @@ public class GuestWaveUI : MonoBehaviour
         if (panel != null)
             panel.SetActive(false);
 
-        // Pri odmietnutí začína cooldown okamžite.
         guestStayTimer.StartCooldown(cooldownDuration);
 
         Debug.Log(
-            "Celá vlna bola odmietnutá. Začína 2-minútový cooldown."
+            "Celá vlna bola odmietnutá. " +
+            "Začína 2-minútový cooldown."
         );
     }
 
@@ -160,14 +189,13 @@ public class GuestWaveUI : MonoBehaviour
         if (waveManager == null || guestStayTimer == null)
             return;
 
-        // Oznámime manageru, že hosťom skončil pobyt.
         waveManager.NotifyGuestStayFinished();
 
-        // Po skončení pobytu začína cooldown do ďalšej vlny.
         guestStayTimer.StartCooldown(cooldownDuration);
 
         Debug.Log(
-            "Pobyt hostí skončil. Začína cooldown do ďalšej vlny."
+            "Pobyt hostí skončil. " +
+            "Začína cooldown do ďalšej vlny."
         );
     }
 
@@ -180,8 +208,90 @@ public class GuestWaveUI : MonoBehaviour
             guestStayTimer.HideTimer();
 
         Debug.Log(
-            "Cooldown skončil. Čaká sa na dokončenie odchodu hostí."
+            "Cooldown skončil. " +
+            "Čaká sa na dokončenie odchodu hostí."
         );
+    }
+
+    private void OnDepartureFinished()
+    {
+        if (rewardManager == null)
+        {
+            Debug.LogError(
+                "GuestWaveUI: Nie je priradený WaveRewardManager."
+            );
+            return;
+        }
+
+        if (!rewardManager.RewardsReady || rewardManager.RewardsClaimed)
+            return;
+
+        RefreshRewardPanel();
+
+        if (rewardPanel != null)
+            rewardPanel.SetActive(true);
+
+        Debug.Log(
+            "GuestWaveUI: Zobrazujem výsledky vlny."
+        );
+    }
+
+    private void RefreshRewardPanel()
+    {
+        if (rewardManager == null)
+            return;
+
+        if (roomRewardText != null)
+            roomRewardText.text =
+                "Room: " + rewardManager.RoomCount;
+
+        if (relaxRewardText != null)
+            relaxRewardText.text =
+                "Relax: " + rewardManager.RelaxCount;
+
+        if (foodRewardText != null)
+            foodRewardText.text =
+                "Food: " + rewardManager.FoodCount;
+
+        if (drinkRewardText != null)
+            drinkRewardText.text =
+                "Drink: " + rewardManager.DrinkCount;
+
+        if (totalCoinsText != null)
+            totalCoinsText.text =
+                "Coins: " + rewardManager.TotalCoins;
+
+        if (totalEnergyText != null)
+            totalEnergyText.text =
+                "Energy: +" + rewardManager.TotalEnergy;
+
+        if (totalResortValueText != null)
+            totalResortValueText.text =
+                "Resort Value: +" + rewardManager.TotalResortValue;
+    }
+
+    // Pripojené na OnClick tlačidla CLAIM.
+    public void ClaimRewards()
+    {
+        if (rewardManager == null)
+        {
+            Debug.LogError(
+                "GuestWaveUI: Nie je priradený WaveRewardManager."
+            );
+            return;
+        }
+
+        rewardManager.ClaimRewards();
+
+        if (rewardManager.RewardsClaimed)
+        {
+            if (rewardPanel != null)
+                rewardPanel.SetActive(false);
+
+            Debug.Log(
+                "GuestWaveUI: Hráč si vyzdvihol odmeny."
+            );
+        }
     }
 
     private void CreateGuestRow(GameObject guest)
@@ -195,7 +305,6 @@ public class GuestWaveUI : MonoBehaviour
         }
 
         GameObject row = Instantiate(guestRowTemplate, guestList);
-
         row.name = guest.name + "_Row";
         row.SetActive(true);
 
@@ -217,7 +326,8 @@ public class GuestWaveUI : MonoBehaviour
         if (nameText == null || needsText == null)
         {
             Debug.LogError(
-                "GuestWaveUI: V GuestRowTemplate chýba GuestName alebo GuestNeedsText."
+                "GuestWaveUI: V GuestRowTemplate chýba " +
+                "GuestName alebo GuestNeedsText."
             );
 
             Destroy(row);
@@ -229,7 +339,6 @@ public class GuestWaveUI : MonoBehaviour
         GuestNeeds needs = guest.GetComponent<GuestNeeds>();
 
         GuestRowUI rowUI = new GuestRowUI(needsText, needs);
-
         guestRows.Add(guest, rowUI);
 
         if (needs != null)
