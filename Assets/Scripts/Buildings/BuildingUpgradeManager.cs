@@ -3,7 +3,8 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
-// Ikonky nad budovami na ostrove. Klik na ikonku = upgrade budovy na model ďalšej úrovne
+// Ikonky nad budovami na ostrove. Klik na ikonku otvorí okno ponuky vylepšenia (FR-22, UpgradePopup)
+// s cenou a úrovňou; tlačidlo VYLEPŠIŤ zmení budovu na model ďalšej úrovne
 // (napr. BeachHotel_L1 -> BeachHotel_L2). Upgrade stojí mince a energiu (ResortResources).
 // Budovy sa v scéne hľadajú podľa mena modelu medzi koreňovými objektmi scény,
 // takže netreba nič ručne priraďovať na budovy.
@@ -56,6 +57,7 @@ public class BuildingUpgradeManager : MonoBehaviour
     readonly List<Building> buildings = new List<Building>();
     Canvas canvas;
     Camera cam;
+    UpgradePopup popup;
 
     // Aktuálna úroveň budovy podľa názvu typu (napr. "Hotel"): 1 = Level 1. Vráti 0, ak sa budova nenašla.
     public int GetLevel(string label)
@@ -82,6 +84,7 @@ public class BuildingUpgradeManager : MonoBehaviour
         }
 
         BuildCanvas();
+        popup = UpgradePopup.Create(transform);
 
         foreach (var root in gameObject.scene.GetRootGameObjects())
         {
@@ -152,7 +155,7 @@ public class BuildingUpgradeManager : MonoBehaviour
         colors.highlightedColor = new Color(1f, 0.95f, 0.8f, 1f);
         colors.pressedColor = new Color(0.8f, 0.75f, 0.65f, 1f);
         button.colors = colors;
-        button.onClick.AddListener(() => Upgrade(b));
+        button.onClick.AddListener(() => OpenPopup(b));
 
         // úroveň pod ikonkou
         b.levelText = CreateText(icon.transform, "Level", 22, TextAnchor.UpperCenter);
@@ -268,16 +271,54 @@ public class BuildingUpgradeManager : MonoBehaviour
         b.energyText.color = energyOk ? TextColor : ShortColor;
     }
 
-    void Upgrade(Building b)
+    // FR-22: klik na ikonku -> okno s cenou a úrovňou. Upgrade sa spraví až tlačidlom VYLEPŠIŤ.
+    void OpenPopup(Building b)
     {
         if (b.instance == null) return;
+        if (popup == null) popup = UpgradePopup.Create(transform);
+        if (popup.IsOpen) return;
+
+        var icon = b.root != null ? b.root.GetComponent<Image>() : null;
+        var info = new UpgradePopup.Info
+        {
+            nameNominative = DisplayName(b.type.label, false),
+            nameAccusative = DisplayName(b.type.label, true),
+            icon = icon != null ? icon.sprite : null,
+            level = b.level + 1,
+            maxLevel = b.type.levels != null ? b.type.levels.Length : 1,
+            coinCost = b.coinCost,
+            energyCost = b.energyCost,
+        };
+
+        popup.Show(info, () =>
+        {
+            if (Upgrade(b)) popup.Close();
+            else popup.Refresh();
+        });
+    }
+
+    // Slovenský názov budovy do okna (label v Inspectore je "Hotel" / "Restaurant" / "Bar").
+    static string DisplayName(string label, bool accusative)
+    {
+        switch (label)
+        {
+            case "Restaurant": return accusative ? "Reštauráciu" : "Reštaurácia";
+            case "Bar": return "Plážový bar";
+            default: return label;
+        }
+    }
+
+    // Vráti true, ak sa budova naozaj vylepšila.
+    bool Upgrade(Building b)
+    {
+        if (b.instance == null) return false;
 
         int nextIndex = b.level + 1;
         if (nextIndex >= b.type.levels.Length || b.type.levels[nextIndex] == null)
         {
             b.punch = 1f;
             Debug.Log(b.type.label + ": už je na maximálnej úrovni (" + (b.level + 1) + ").");
-            return;
+            return false;
         }
 
         var res = ResortResources.Instance;
@@ -285,7 +326,7 @@ public class BuildingUpgradeManager : MonoBehaviour
         {
             b.shake = 1f;
             Debug.LogWarning("BuildingUpgradeManager: v scéne nie je ResortResources, upgrade sa nedá zaplatiť.");
-            return;
+            return false;
         }
 
         if (!res.TrySpend(b.coinCost, b.energyCost))
@@ -293,7 +334,7 @@ public class BuildingUpgradeManager : MonoBehaviour
             b.shake = 1f;
             Debug.Log(b.type.label + ": nedostatok zdrojov. Treba " + b.coinCost + " mincí a " + b.energyCost +
                       " energie, máš " + res.Coins + " a " + res.Energy + ".");
-            return;
+            return false;
         }
 
         var next = b.type.levels[nextIndex];
@@ -311,6 +352,7 @@ public class BuildingUpgradeManager : MonoBehaviour
         Debug.Log(b.type.label + ": upgrade na úroveň " + (b.level + 1) + "/" + b.type.levels.Length +
                   " (-" + (CostAt(b.type.upgradeCoins, nextIndex - 1)) + " mincí, -" +
                   (CostAt(b.type.upgradeEnergy, nextIndex - 1)) + " energie)");
+        return true;
     }
 
     void LateUpdate()
