@@ -36,7 +36,7 @@ public class UpgradePopup : MonoBehaviour
 
     // ---------- rozmery (referenčné rozlíšenie 1920 x 1080) ----------
     const float PanelWidth = 840f;
-    const float PanelHeight = 630f;
+    const float PanelHeight = 620f;
     const float PanelHeightMax = 470f;
 
     Info info;
@@ -53,8 +53,8 @@ public class UpgradePopup : MonoBehaviour
     Text currentLevel;
     Text nextLevel;
     Text costLabel;
-    Pill coinPill;
-    Pill energyPill;
+    CostRow coinRow;
+    CostRow energyRow;
     Text note;
     GameObject maxGroup;
     Text maxMessage;
@@ -64,12 +64,10 @@ public class UpgradePopup : MonoBehaviour
     Button closeButton;
     RectTransform closeRect;
 
-    class Pill
+    class CostRow
     {
         public GameObject root;
-        public Image bar;
         public Text value;
-        public Text have;
     }
 
     public bool IsOpen => root != null && root.activeSelf;
@@ -99,8 +97,8 @@ public class UpgradePopup : MonoBehaviour
 
         levelsGroup.SetActive(!isMax);
         costLabel.gameObject.SetActive(!isMax);
-        coinPill.root.SetActive(!isMax);
-        energyPill.root.SetActive(!isMax);
+        coinRow.root.SetActive(!isMax);
+        energyRow.root.SetActive(!isMax);
         upgradeButton.gameObject.SetActive(!isMax);
         maxGroup.SetActive(isMax);
 
@@ -115,10 +113,10 @@ public class UpgradePopup : MonoBehaviour
         {
             currentLevel.text = "Level " + data.level;
             nextLevel.text = "Level " + (data.level + 1);
-            coinPill.value.text = Format(data.coinCost);
-            energyPill.value.text = Format(data.energyCost);
+            coinRow.value.text = Format(data.coinCost);
+            energyRow.value.text = Format(data.energyCost);
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
-            closeRect.anchoredPosition = new Vector2(165f, -560f);
+            closeRect.anchoredPosition = new Vector2(165f, -550f);
         }
 
         root.SetActive(true);
@@ -152,8 +150,8 @@ public class UpgradePopup : MonoBehaviour
         bool coinsOk = res != null && coins >= info.coinCost;
         bool energyOk = res != null && energy >= info.energyCost;
 
-        SetPill(coinPill, coins, coinsOk);
-        SetPill(energyPill, energy, energyOk);
+        coinRow.value.color = coinsOk ? ValueColor : ShortColor;
+        energyRow.value.color = energyOk ? ValueColor : ShortColor;
 
         bool canUpgrade = coinsOk && energyOk;
         upgradeButton.interactable = canUpgrade;
@@ -172,13 +170,6 @@ public class UpgradePopup : MonoBehaviour
 
         note.text = message;
         note.gameObject.SetActive(message.Length > 0);
-    }
-
-    void SetPill(Pill pill, int have, bool ok)
-    {
-        pill.have.text = "máš " + Format(have);
-        pill.value.color = ok ? ValueColor : ShortColor;
-        pill.bar.sprite = ok ? Sprites.Bar : Sprites.BarShort;
     }
 
     void OnUpgradeClicked()
@@ -286,10 +277,10 @@ public class UpgradePopup : MonoBehaviour
         // Cena
         costLabel = CreateText("CostLabel", panel, new Vector2(0f, -340f), new Vector2(600f, 30f), 21, TitleColor, TextAnchor.MiddleCenter);
         costLabel.text = "CENA VYLEPŠENIA";
-        coinPill = CreatePill(panel, "Mince", "UI/Icons/coin", new Vector2(-180f, -410f));
-        energyPill = CreatePill(panel, "Energia", "UI/Icons/energy", new Vector2(180f, -410f));
+        coinRow = CreateCostRow(panel, "CoinCost", "UI/Icons/coin", new Vector2(-90f, -405f));
+        energyRow = CreateCostRow(panel, "EnergyCost", "UI/Icons/energy", new Vector2(110f, -405f));
 
-        note = CreateText("Note", panel, new Vector2(0f, -478f), new Vector2(760f, 30f), 21, ShortColor, TextAnchor.MiddleCenter);
+        note = CreateText("Note", panel, new Vector2(0f, -468f), new Vector2(760f, 30f), 21, ShortColor, TextAnchor.MiddleCenter);
         note.gameObject.SetActive(false);
 
         // MAX úroveň
@@ -301,12 +292,12 @@ public class UpgradePopup : MonoBehaviour
         maxGroup.SetActive(false);
 
         // Tlačidlá
-        upgradeButton = CreateButton(panel, "UpgradeButton", "VYLEPŠIŤ", Sprites.Green, new Vector2(-165f, -560f),
+        upgradeButton = CreateButton(panel, "UpgradeButton", "VYLEPŠIŤ", Sprites.Green, new Vector2(-165f, -550f),
             new Color(0.03f, 0.36f, 0.08f, 1f), out upgradeImage, out upgradeText);
         upgradeText.color = Color.white;
         upgradeButton.onClick.AddListener(OnUpgradeClicked);
 
-        closeButton = CreateButton(panel, "CloseButton", "ZAVRIEŤ", Sprites.WoodButton, new Vector2(165f, -560f),
+        closeButton = CreateButton(panel, "CloseButton", "ZAVRIEŤ", Sprites.WoodButton, new Vector2(165f, -550f),
             new Color(0.1f, 0.06f, 0.03f, 1f), out _, out _);
         closeRect = (RectTransform)closeButton.transform;
         closeButton.onClick.AddListener(Close);
@@ -328,70 +319,36 @@ public class UpgradePopup : MonoBehaviour
         return CreateText("Value", box.transform, new Vector2(0f, -56f), new Vector2(200f, 40f), 34, ValueColor, TextAnchor.MiddleCenter);
     }
 
-    // Rovnaká "pilulka" ako Mince / Energia v ResourceHud.
-    Pill CreatePill(Transform parent, string titleText, string iconResource, Vector2 position)
+    // Cena: ikonka (minca / energia) a len samotná cena; mince a energia sú vedľa seba.
+    CostRow CreateCostRow(Transform parent, string name, string iconResource, Vector2 position)
     {
-        var pill = new Pill();
-        pill.root = CreateUi(titleText, parent);
-        Place(pill.root, position, new Vector2(312f, 82f));
+        var row = new CostRow();
+        row.root = CreateUi(name, parent);
+        Place(row.root, position, new Vector2(240f, 66f));
 
-        var bar = CreateUi("Bar", pill.root.transform);
-        var barRect = (RectTransform)bar.transform;
-        barRect.anchorMin = new Vector2(0f, 0.5f);
-        barRect.anchorMax = new Vector2(1f, 0.5f);
-        barRect.pivot = new Vector2(0.5f, 0.5f);
-        barRect.anchoredPosition = new Vector2(16f, 0f);
-        barRect.sizeDelta = new Vector2(-28f, 54f);
-        pill.bar = bar.AddComponent<Image>();
-        pill.bar.sprite = Sprites.Bar;
-        pill.bar.type = Image.Type.Sliced;
-        pill.bar.raycastTarget = false;
-
-        var icon = CreateUi("Icon", pill.root.transform);
+        var icon = CreateUi("Icon", row.root.transform);
         var iconRect = (RectTransform)icon.transform;
-        iconRect.anchorMin = iconRect.anchorMax = new Vector2(0f, 0.5f);
-        iconRect.pivot = new Vector2(0f, 0.5f);
-        iconRect.anchoredPosition = new Vector2(-6f, 2f);
-        iconRect.sizeDelta = new Vector2(84f, 84f);
+        iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
+        iconRect.pivot = new Vector2(0.5f, 0.5f);
+        iconRect.anchoredPosition = new Vector2(-42f, 0f);
+        iconRect.sizeDelta = new Vector2(66f, 66f);
         var iconImage = icon.AddComponent<Image>();
         iconImage.sprite = Resources.Load<Sprite>(iconResource);
         iconImage.preserveAspect = true;
         iconImage.raycastTarget = false;
 
-        var t = CreateUi("Title", pill.root.transform);
-        var tRect = (RectTransform)t.transform;
-        tRect.anchorMin = new Vector2(0f, 0.5f);
-        tRect.anchorMax = new Vector2(1f, 1f);
-        tRect.offsetMin = new Vector2(82f, -2f);
-        tRect.offsetMax = new Vector2(-16f, -8f);
-        var tText = t.AddComponent<Text>();
-        SetupText(tText, 15, TitleColor, TextAnchor.MiddleLeft);
-        tText.text = titleText;
-        AddOutline(t, 1.4f);
+        var value = CreateUi("Value", row.root.transform);
+        var valueRect = (RectTransform)value.transform;
+        valueRect.anchorMin = valueRect.anchorMax = new Vector2(0.5f, 0.5f);
+        valueRect.pivot = new Vector2(0f, 0.5f);
+        valueRect.anchoredPosition = new Vector2(0f, 0f);
+        valueRect.sizeDelta = new Vector2(160f, 50f);
+        row.value = value.AddComponent<Text>();
+        SetupText(row.value, 38, ValueColor, TextAnchor.MiddleLeft);
+        row.value.fontStyle = FontStyle.Bold;
+        AddOutline(value, 2f);
 
-        var v = CreateUi("Value", pill.root.transform);
-        var vRect = (RectTransform)v.transform;
-        vRect.anchorMin = new Vector2(0f, 0f);
-        vRect.anchorMax = new Vector2(1f, 0.58f);
-        vRect.offsetMin = new Vector2(82f, 12f);
-        vRect.offsetMax = new Vector2(-16f, 8f);
-        pill.value = v.AddComponent<Text>();
-        SetupText(pill.value, 24, ValueColor, TextAnchor.MiddleLeft);
-        pill.value.fontStyle = FontStyle.Bold;
-        AddOutline(v, 1.4f);
-
-        var h = CreateUi("Have", pill.root.transform);
-        var hRect = (RectTransform)h.transform;
-        hRect.anchorMin = hRect.anchorMax = new Vector2(1f, 0.5f);
-        hRect.pivot = new Vector2(1f, 0.5f);
-        hRect.anchoredPosition = new Vector2(-22f, -6f);
-        hRect.sizeDelta = new Vector2(170f, 26f);
-        pill.have = h.AddComponent<Text>();
-        SetupText(pill.have, 15, SubColor, TextAnchor.MiddleRight);
-        pill.have.fontStyle = FontStyle.Bold;
-        AddOutline(h, 1.2f);
-
-        return pill;
+        return row;
     }
 
     Button CreateButton(Transform parent, string name, string label, Sprite sprite, Vector2 position, Color shadowColor,
@@ -498,23 +455,32 @@ public class UpgradePopup : MonoBehaviour
     {
         static Sprite panel, bar, barShort, levelBox, levelBoxNext, green, gray, woodButton, arrow;
 
-        public static Sprite Panel => panel ?? (panel = RoundRect(200, 200, 46f, 7f, Wood, WoodTop, Gold, GoldLight));
-        public static Sprite Bar => bar ?? (bar = RoundRect(280, 64, 30f, 4.5f, Wood, WoodTop, Gold, GoldLight));
-        public static Sprite BarShort => barShort ?? (barShort = RoundRect(280, 64, 30f, 4.5f, Wood, WoodTop,
+        public static Sprite Panel => Get(ref panel, () => RoundRect(200, 200, 46f, 7f, Wood, WoodTop, Gold, GoldLight));
+        public static Sprite Bar => Get(ref bar, () => RoundRect(280, 64, 30f, 4.5f, Wood, WoodTop, Gold, GoldLight));
+        public static Sprite BarShort => Get(ref barShort, () => RoundRect(280, 64, 30f, 4.5f, Wood, WoodTop,
             new Color(0.88f, 0.34f, 0.31f, 1f), new Color(1f, 0.56f, 0.53f, 1f)));
-        public static Sprite LevelBox => levelBox ?? (levelBox = RoundRect(120, 100, 32f, 4f,
+        public static Sprite LevelBox => Get(ref levelBox, () => RoundRect(120, 100, 32f, 4f,
             new Color(0f, 0f, 0f, 0.3f), new Color(0f, 0f, 0f, 0.26f),
             new Color(0.93f, 0.72f, 0.28f, 0.6f), new Color(0.93f, 0.72f, 0.28f, 0.6f)));
-        public static Sprite LevelBoxNext => levelBoxNext ?? (levelBoxNext = RoundRect(120, 100, 32f, 4.5f,
+        public static Sprite LevelBoxNext => Get(ref levelBoxNext, () => RoundRect(120, 100, 32f, 4.5f,
             new Color(0.93f, 0.72f, 0.28f, 0.16f), new Color(0.93f, 0.72f, 0.28f, 0.22f), GoldLight, GoldLight));
-        public static Sprite Green => green ?? (green = RoundRect(120, 80, 20f, 4f,
+        public static Sprite Green => Get(ref green, () => RoundRect(120, 80, 20f, 4f,
             new Color(0f, 0.72f, 0.14f, 1f), new Color(0.24f, 1f, 0.39f, 1f),
             new Color(0.04f, 0.48f, 0.11f, 1f), new Color(0.04f, 0.48f, 0.11f, 1f)));
-        public static Sprite Gray => gray ?? (gray = RoundRect(120, 80, 20f, 4f,
+        public static Sprite Gray => Get(ref gray, () => RoundRect(120, 80, 20f, 4f,
             new Color(0.36f, 0.36f, 0.36f, 1f), new Color(0.55f, 0.55f, 0.55f, 1f),
             new Color(0.26f, 0.26f, 0.26f, 1f), new Color(0.26f, 0.26f, 0.26f, 1f)));
-        public static Sprite WoodButton => woodButton ?? (woodButton = RoundRect(120, 80, 20f, 4f, Wood, WoodTop, Gold, GoldLight));
-        public static Sprite Arrow => arrow ?? (arrow = ArrowSprite());
+        public static Sprite WoodButton => Get(ref woodButton, () => RoundRect(120, 80, 20f, 4f, Wood, WoodTop, Gold, GoldLight));
+        public static Sprite Arrow => Get(ref arrow, () => ArrowSprite());
+
+        // Pozor: projekt má vypnutý Domain Reload (Enter Play Mode Options), statické polia prežijú
+        // koniec Play módu, ale textúry sa zničia. Preto test cez Unity "== null" (nie "??"),
+        // ktorý zničený sprite rozpozná a vytvorí ho znova - inak by sa okno vykreslilo bielo.
+        static Sprite Get(ref Sprite cache, Func<Sprite> create)
+        {
+            if (cache == null) cache = create();
+            return cache;
+        }
 
         // Zaoblený obdĺžnik: výplň s prechodom zdola nahor, okraj (horná polovica svetlejšia).
         static Sprite RoundRect(int width, int height, float radius, float rim,
