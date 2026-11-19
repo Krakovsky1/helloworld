@@ -20,7 +20,9 @@ public class UpgradePopup : MonoBehaviour
         public int maxLevel;            // počet úrovní budovy
         public int coinCost;            // cena vylepšenia v minciach
         public int energyCost;          // cena vylepšenia v energii
-        public bool IsMax => level >= maxLevel;
+        public bool isNew;              // budova ešte nie je postavená (napr. bazén) -> okno "Postaviť"
+        public string blockedReason;    // ak nie je prázdne, vylepšiť sa nedá (napr. "Najprv vylepši Hotel na Level 3")
+        public bool IsMax => !isNew && level >= maxLevel;
     }
 
     // ---------- farby (rovnaké ako ResourceHud) ----------
@@ -52,6 +54,7 @@ public class UpgradePopup : MonoBehaviour
     GameObject levelsGroup;
     Text currentLevel;
     Text nextLevel;
+    Text nextCaption;
     Text costLabel;
     CostRow coinRow;
     CostRow energyRow;
@@ -92,8 +95,10 @@ public class UpgradePopup : MonoBehaviour
         badge.enabled = data.icon != null;
 
         bool isMax = data.IsMax;
-        title.text = isMax ? data.nameNominative : "Vylepšiť " + data.nameAccusative;
-        subtitle.text = "Úroveň " + data.level + " z " + data.maxLevel;
+        title.text = isMax ? data.nameNominative : (data.isNew ? "Postaviť " : "Vylepšiť ") + data.nameAccusative;
+        subtitle.text = data.isNew
+            ? "Nová budova – najviac Level " + data.maxLevel
+            : "Úroveň " + data.level + " z " + data.maxLevel;
 
         levelsGroup.SetActive(!isMax);
         costLabel.gameObject.SetActive(!isMax);
@@ -111,8 +116,12 @@ public class UpgradePopup : MonoBehaviour
         }
         else
         {
-            currentLevel.text = "Level " + data.level;
+            currentLevel.text = data.isNew ? "Nepostavený" : "Level " + data.level;
+            currentLevel.fontSize = data.isNew ? 26 : 34;
             nextLevel.text = "Level " + (data.level + 1);
+            nextCaption.text = data.isNew ? "PO POSTAVENÍ" : "PO VYLEPŠENÍ";
+            costLabel.text = data.isNew ? "CENA STAVBY" : "CENA VYLEPŠENIA";
+            upgradeText.text = data.isNew ? "POSTAVIŤ" : "VYLEPŠIŤ";
             coinRow.value.text = Format(data.coinCost);
             energyRow.value.text = Format(data.energyCost);
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
@@ -153,13 +162,16 @@ public class UpgradePopup : MonoBehaviour
         coinRow.value.color = coinsOk ? ValueColor : ShortColor;
         energyRow.value.color = energyOk ? ValueColor : ShortColor;
 
-        bool canUpgrade = coinsOk && energyOk;
+        bool blocked = !string.IsNullOrEmpty(info.blockedReason);
+        bool canUpgrade = coinsOk && energyOk && !blocked;
         upgradeButton.interactable = canUpgrade;
         upgradeImage.sprite = canUpgrade ? Sprites.Green : Sprites.Gray;
         upgradeText.color = canUpgrade ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f);
 
         string message = "";
-        if (res == null)
+        if (blocked)
+            message = info.blockedReason;
+        else if (res == null)
             message = "Zdroje rezortu nie sú dostupné";
         else if (!coinsOk && !energyOk)
             message = "Nedostatok mincí aj energie";
@@ -169,6 +181,7 @@ public class UpgradePopup : MonoBehaviour
             message = "Nedostatok energie – chýba ti " + Format(info.energyCost - energy);
 
         note.text = message;
+        note.color = blocked ? TitleColor : ShortColor;   // podmienka = zlatá, nedostatok zdrojov = červená
         note.gameObject.SetActive(message.Length > 0);
     }
 
@@ -265,8 +278,8 @@ public class UpgradePopup : MonoBehaviour
         // Úroveň teraz -> po vylepšení
         levelsGroup = CreateUi("Levels", panel);
         Place(levelsGroup, new Vector2(0f, -250f), new Vector2(700f, 100f));
-        currentLevel = CreateLevelBox(levelsGroup.transform, "Current", -215f, "TERAZ", Sprites.LevelBox);
-        nextLevel = CreateLevelBox(levelsGroup.transform, "Next", 215f, "PO VYLEPŠENÍ", Sprites.LevelBoxNext);
+        currentLevel = CreateLevelBox(levelsGroup.transform, "Current", -215f, "TERAZ", Sprites.LevelBox, out _);
+        nextLevel = CreateLevelBox(levelsGroup.transform, "Next", 215f, "PO VYLEPŠENÍ", Sprites.LevelBoxNext, out nextCaption);
         var arrowGo = CreateUi("Arrow", levelsGroup.transform);
         Place(arrowGo, new Vector2(0f, -50f), new Vector2(64f, 48f));
         var arrow = arrowGo.AddComponent<Image>();
@@ -305,7 +318,7 @@ public class UpgradePopup : MonoBehaviour
         root.SetActive(false);
     }
 
-    Text CreateLevelBox(Transform parent, string name, float x, string caption, Sprite sprite)
+    Text CreateLevelBox(Transform parent, string name, float x, string caption, Sprite sprite, out Text captionText)
     {
         var box = CreateUi(name, parent);
         Place(box, new Vector2(x, -50f), new Vector2(210f, 88f));
@@ -316,6 +329,7 @@ public class UpgradePopup : MonoBehaviour
 
         var cap = CreateText("Caption", box.transform, new Vector2(0f, -22f), new Vector2(200f, 22f), 16, TitleColor, TextAnchor.MiddleCenter);
         cap.text = caption;
+        captionText = cap;
         return CreateText("Value", box.transform, new Vector2(0f, -56f), new Vector2(200f, 40f), 34, ValueColor, TextAnchor.MiddleCenter);
     }
 
