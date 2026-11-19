@@ -59,12 +59,30 @@ public class BuildingUpgradeManager : MonoBehaviour
     Camera cam;
     UpgradePopup popup;
 
+    // Hlavná budova: žiadna iná budova (ani bazén) nesmie mať vyššiu úroveň ako hotel.
+    public const string HotelLabel = "Hotel";
+
+    // Veľkosť ikoniek H / R / B (aby mali ostatné ikonky na ostrove, napr. bazén, rovnakú veľkosť).
+    public float IconSize => iconSize;
+
     // Aktuálna úroveň budovy podľa názvu typu (napr. "Hotel"): 1 = Level 1. Vráti 0, ak sa budova nenašla.
     public int GetLevel(string label)
     {
         foreach (var b in buildings)
             if (b.instance != null && b.type.label == label) return b.level + 1;
         return 0;
+    }
+
+    // Úroveň hotela (hlavnej budovy); 0 ak sa hotel nenašiel.
+    public int HotelLevel => GetLevel(HotelLabel);
+
+    // Ak budova (okrem hotela) nemôže ísť na úroveň targetLevel, vráti dôvod pre hráča; inak null.
+    public string LevelLimitReason(string label, int targetLevel)
+    {
+        if (label == HotelLabel) return null;
+        int hotel = HotelLevel;
+        if (hotel < 1 || targetLevel <= hotel) return null;
+        return "Najprv vylepši Hotel na Level " + targetLevel;
     }
 
     // Aktuálny objekt budovy v scéne (po upgrade je to nový model). Vráti null, ak sa budova nenašla.
@@ -288,6 +306,7 @@ public class BuildingUpgradeManager : MonoBehaviour
             maxLevel = b.type.levels != null ? b.type.levels.Length : 1,
             coinCost = b.coinCost,
             energyCost = b.energyCost,
+            blockedReason = LevelLimitReason(b.type.label, b.level + 2),
         };
 
         popup.Show(info, () =>
@@ -318,6 +337,14 @@ public class BuildingUpgradeManager : MonoBehaviour
         {
             b.punch = 1f;
             Debug.Log(b.type.label + ": už je na maximálnej úrovni (" + (b.level + 1) + ").");
+            return false;
+        }
+
+        string limit = LevelLimitReason(b.type.label, nextIndex + 1);
+        if (limit != null)
+        {
+            b.shake = 1f;
+            Debug.Log(b.type.label + ": " + limit + " (žiadna budova nesmie mať vyššiu úroveň ako hotel).");
             return false;
         }
 
