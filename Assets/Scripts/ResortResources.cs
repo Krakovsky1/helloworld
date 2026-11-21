@@ -8,7 +8,7 @@ public class ResortResources : MonoBehaviour
 
     public event Action Changed;
 
-    [SerializeField] int coins = 10;
+    [SerializeField] int coins = 250;
     [SerializeField] int energy = 10;
     [SerializeField] int resortValue = 5;
 

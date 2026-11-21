@@ -6,6 +6,10 @@ public class WaveRewardManager : MonoBehaviour
 {
     [Header("References")]
     [SerializeField] private GuestWaveManager waveManager;
+    [SerializeField] private GuestServiceManager guestServiceManager;
+
+    [Header("Rating penalty")]
+    [SerializeField, Range(0f, 100f)] private float ratingPenaltyPercent = 20f;
 
     [Header("Service rewards")]
     [SerializeField] private int roomReward = 8;
@@ -34,8 +38,11 @@ public class WaveRewardManager : MonoBehaviour
     private bool waveAccepted;
     private bool rewardsReady;
     private bool rewardsClaimed;
+    private bool ratingPenaltyApplied;
+    private int ratingsBelowFiveAtWaveEnd;
+    private int totalRatingsAtWaveEnd;
 
-    // Event sa vyvol· aû po pripravenÌ vöetk˝ch odmien.
+    // Event sa vyvol√° a¬û po pripraven√≠ v¬öetk√Ωch odmien.
     public event Action RewardsBecameReady;
 
     public int RoomCount => roomCount;
@@ -43,26 +50,45 @@ public class WaveRewardManager : MonoBehaviour
     public int FoodCount => foodCount;
     public int DrinkCount => drinkCount;
 
-    public int TotalCoins =>
+    private int BaseTotalCoins =>
         roomCount * roomReward +
         relaxCount * relaxReward +
         foodCount * foodReward +
         drinkCount * drinkReward;
 
-    public int TotalEnergy => guestCount * energyPerGuest;
+    private int BaseTotalEnergy => guestCount * energyPerGuest;
 
-    public int TotalResortValue =>
+    private int BaseTotalResortValue =>
         guestCount * resortValuePerGuest;
+
+    // Penaliz√°cia sa vyhodnot√≠ po skonƒçen√≠ vlny a plat√≠ pre v≈°etky odmeny.
+    public int TotalCoins => ApplyRatingPenalty(BaseTotalCoins);
+    public int TotalEnergy => ApplyRatingPenalty(BaseTotalEnergy);
+    public int TotalResortValue => ApplyRatingPenalty(BaseTotalResortValue);
+
+    public bool RatingPenaltyApplied => ratingPenaltyApplied;
+    public int RatingsBelowFiveAtWaveEnd => ratingsBelowFiveAtWaveEnd;
+    public int TotalRatingsAtWaveEnd => totalRatingsAtWaveEnd;
+    public float RatingsBelowFivePercentage =>
+        totalRatingsAtWaveEnd == 0
+            ? 0f
+            : (float)ratingsBelowFiveAtWaveEnd / totalRatingsAtWaveEnd * 100f;
 
     public bool RewardsReady => rewardsReady;
     public bool RewardsClaimed => rewardsClaimed;
 
     private void OnEnable()
     {
+        if (guestServiceManager == null)
+            guestServiceManager = FindAnyObjectByType<GuestServiceManager>();
+
+        if (guestServiceManager == null)
+            Debug.LogError("WaveRewardManager: GuestServiceManager sa nena≈°iel. Penaliz√°cia hodnoten√≠ nebude dostupn√°.");
+
         if (waveManager == null)
         {
             Debug.LogError(
-                "WaveRewardManager: Ch˝ba GuestWaveManager!"
+                "WaveRewardManager: Ch√Ωba GuestWaveManager!"
             );
             return;
         }
@@ -116,7 +142,7 @@ public class WaveRewardManager : MonoBehaviour
         }
 
         Debug.Log(
-            "WaveRewardManager: Evidencia vlny spusten·. " +
+            "WaveRewardManager: Evidencia vlny spusten√°. " +
             "Hostia: " + guestCount +
             ", Room limit: " + roomLimit
         );
@@ -140,7 +166,7 @@ public class WaveRewardManager : MonoBehaviour
                 RegisterNeed(need);
         }
 
-        Debug.Log("WaveRewardManager: Vlna prijat·.");
+        Debug.Log("WaveRewardManager: Vlna prijat√°.");
     }
 
     private void OnWaveRejected(IReadOnlyList<GameObject> guests)
@@ -149,8 +175,8 @@ public class WaveRewardManager : MonoBehaviour
         UnsubscribeFromGuests();
 
         Debug.Log(
-            "WaveRewardManager: Vlna odmietnut·. " +
-            "Odmeny sa neudeæuj˙."
+            "WaveRewardManager: Vlna odmietnut√°. " +
+            "Odmeny sa neude¬æuj√∫."
         );
     }
 
@@ -201,26 +227,31 @@ public class WaveRewardManager : MonoBehaviour
         UnsubscribeFromGuests();
 
         Debug.Log(
-            "WaveRewardManager: Evidencia sluûieb ukonËen·."
+            "WaveRewardManager: Evidencia slu¬ûieb ukon√®en√°."
         );
     }
 
-    // Odmeny sa pripravia po dokonËenÌ odchodu lode.
+    // Odmeny sa pripravia po dokon√®en√≠ odchodu lode.
     private void OnDepartureFinished()
     {
         if (!waveAccepted || rewardsReady)
             return;
 
+        EvaluateRatingPenalty();
         rewardsReady = true;
 
         Debug.Log(
             "WAVE REWARDS READY\n" +
-            "Coins: " + TotalCoins +
+            "Ratings below 5: " + ratingsBelowFiveAtWaveEnd +
+            "/" + totalRatingsAtWaveEnd +
+            " (" + RatingsBelowFivePercentage.ToString("F1") + "%)" +
+            "\nPenalty applied: " + ratingPenaltyApplied +
+            "\nCoins: " + TotalCoins +
             "\nEnergy: " + TotalEnergy +
             "\nResort value: " + TotalResortValue
         );
 
-        // Aû teraz upozornÌme UI, ûe mÙûe zobraziù panel.
+        // A¬û teraz upozorn√≠me UI, ¬ûe m√¥¬ûe zobrazi¬ù panel.
         RewardsBecameReady?.Invoke();
     }
 
@@ -229,8 +260,8 @@ public class WaveRewardManager : MonoBehaviour
         if (!rewardsReady || rewardsClaimed)
         {
             Debug.LogWarning(
-                "WaveRewardManager: Odmeny nie s˙ dostupnÈ " +
-                "alebo uû boli vyplatenÈ."
+                "WaveRewardManager: Odmeny nie s√∫ dostupn√© " +
+                "alebo u¬û boli vyplaten√©."
             );
             return;
         }
@@ -238,12 +269,12 @@ public class WaveRewardManager : MonoBehaviour
         if (ResortResources.Instance == null)
         {
             Debug.LogError(
-                "WaveRewardManager: ResortResources sa nenaöiel!"
+                "WaveRewardManager: ResortResources sa nena¬öiel!"
             );
             return;
         }
 
-        // Zamedzenie dvojitÈmu vyplateniu.
+        // Zamedzenie dvojit√©mu vyplateniu.
         rewardsClaimed = true;
 
         ResortResources.Instance.AddCoins(TotalCoins);
@@ -251,7 +282,7 @@ public class WaveRewardManager : MonoBehaviour
         ResortResources.Instance.AddResortValue(TotalResortValue);
 
         Debug.Log(
-            "WaveRewardManager: Odmeny vyplatenÈ. " +
+            "WaveRewardManager: Odmeny vyplaten√©. " +
             "Coins: " + TotalCoins +
             ", Energy: " + TotalEnergy +
             ", Resort value: " + TotalResortValue
@@ -274,6 +305,38 @@ public class WaveRewardManager : MonoBehaviour
         waveAccepted = false;
         rewardsReady = false;
         rewardsClaimed = false;
+        ratingPenaltyApplied = false;
+        ratingsBelowFiveAtWaveEnd = 0;
+        totalRatingsAtWaveEnd = 0;
+    }
+
+    private void EvaluateRatingPenalty()
+    {
+        if (guestServiceManager == null)
+        {
+            ratingPenaltyApplied = false;
+            ratingsBelowFiveAtWaveEnd = 0;
+            totalRatingsAtWaveEnd = 0;
+            Debug.LogWarning("WaveRewardManager: Bez GuestServiceManager sa penaliz√°cia ned√° vyhodnoti≈•.");
+            return;
+        }
+
+        ratingsBelowFiveAtWaveEnd = guestServiceManager.RatingsBelowFive;
+        totalRatingsAtWaveEnd = guestServiceManager.TotalRatings;
+
+        // Presne 50 % nestaƒç√≠. Penaliz√°cia plat√≠ iba pri viac ako 50 %.
+        ratingPenaltyApplied =
+            totalRatingsAtWaveEnd > 0 &&
+            ratingsBelowFiveAtWaveEnd * 2 > totalRatingsAtWaveEnd;
+    }
+
+    private int ApplyRatingPenalty(int baseReward)
+    {
+        if (!ratingPenaltyApplied)
+            return baseReward;
+
+        float multiplier = 1f - ratingPenaltyPercent / 100f;
+        return Mathf.FloorToInt(baseReward * multiplier);
     }
 
     private void UnsubscribeFromGuests()

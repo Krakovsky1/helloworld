@@ -118,6 +118,7 @@ public partial class GuestWaveManager : MonoBehaviour
     private bool waveCooldownComplete;
 
     BuildingUpgradeManager upgrades;
+    GuestServiceManager guestServiceManager;
     Button startButton;
 
     void OnEnable()
@@ -133,6 +134,7 @@ public partial class GuestWaveManager : MonoBehaviour
     void Start()
     {
         upgrades = FindAnyObjectByType<BuildingUpgradeManager>();
+        guestServiceManager = FindAnyObjectByType<GuestServiceManager>();
 
         var swb = FindAnyObjectByType<StartWaveButton>();
 
@@ -570,8 +572,18 @@ public partial class GuestWaveManager : MonoBehaviour
         anim.speed = 1.3f;
 
         // Každý hosť má vlastnú evidenciu potrieb.
-        root.AddComponent<GuestNeeds>();
+        GuestNeeds guestNeeds = root.AddComponent<GuestNeeds>();
         root.AddComponent<GuestNeedsGenerator>();
+
+        // Hosťa zaregistrujeme ešte pred spustením generovania potrieb.
+        // Ak manažér nebol nájdený pri štarte, skúsime ho vyhľadať teraz.
+        if (guestServiceManager == null)
+            guestServiceManager = FindAnyObjectByType<GuestServiceManager>();
+
+        if (guestServiceManager != null)
+            guestServiceManager.RegisterGuest(guestNeeds);
+        else
+            Debug.LogError("GuestWaveManager: GuestServiceManager sa nenašiel. Požiadavky hostí sa nebudú evidovať.");
 
         if (gm.rig != null)
         {

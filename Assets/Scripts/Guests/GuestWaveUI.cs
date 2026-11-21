@@ -13,6 +13,10 @@ public class GuestWaveUI : MonoBehaviour
     [SerializeField] private GameObject guestRowTemplate;
     [SerializeField] private TMP_Text guestCountText;
 
+    [Header("Guest Service UI")]
+    [SerializeField] private GuestServiceUI guestServiceUI;
+    [SerializeField] private GameObject guestServicePanel;
+
     [Header("Reward References")]
     [SerializeField] private WaveRewardManager rewardManager;
     [SerializeField] private GameObject rewardPanel;
@@ -23,6 +27,8 @@ public class GuestWaveUI : MonoBehaviour
     [SerializeField] private TMP_Text totalCoinsText;
     [SerializeField] private TMP_Text totalEnergyText;
     [SerializeField] private TMP_Text totalResortValueText;
+    [SerializeField] private TMP_Text starRatingSummaryText;
+    [SerializeField] private GuestServiceManager guestServiceManager;
 
     [Header("Cooldown")]
     [SerializeField] private float cooldownDuration = 120f;
@@ -35,8 +41,25 @@ public class GuestWaveUI : MonoBehaviour
 
     private void Awake()
     {
+        if (guestServiceManager == null)
+            guestServiceManager = FindAnyObjectByType<GuestServiceManager>();
+
+        // GuestServicePanel mÃ´Å¾e byÅ¥ v scÃ©ne aktÃ­vny, preto ho hÄ¾adÃ¡me
+        // aj v prÃ­pade, Å¾e jeho GameObject alebo rodiÄ je neaktÃ­vny.
+        if (guestServiceUI == null)
+            guestServiceUI = FindAnyObjectByType<GuestServiceUI>(FindObjectsInactive.Include);
+
+        // Ak panel nie je priradenÃ½ samostatne, pouÅ¾ijeme objekt s GuestServiceUI.
+        if (guestServicePanel == null && guestServiceUI != null)
+            guestServicePanel = guestServiceUI.gameObject;
+
         if (panel != null)
             panel.SetActive(false);
+
+        HideGuestServicePanel();
+
+        if (guestServiceUI == null)
+            Debug.LogError("GuestWaveUI: GuestServiceUI sa nenaÅ¡iel. Skontroluj komponent GuestServiceUI na GuestServicePanel.");
 
         if (rewardPanel != null)
             rewardPanel.SetActive(false);
@@ -45,8 +68,37 @@ public class GuestWaveUI : MonoBehaviour
             guestRowTemplate.SetActive(false);
     }
 
+    private void Start()
+    {
+        // Poistka po inicializÃ¡cii ostatnÃ½ch UI skriptov:
+        // poÅ¾iadavky sa nesmÃº zobraziÅ¥ pred prijatÃ­m vlny.
+        HideGuestServicePanel();
+    }
+
+    private void HideGuestServicePanel()
+    {
+        if (guestServicePanel != null)
+            guestServicePanel.SetActive(false);
+        else if (guestServiceUI != null)
+            guestServiceUI.gameObject.SetActive(false);
+    }
+
+    private void ShowGuestServicePanel()
+    {
+        if (guestServicePanel != null)
+            guestServicePanel.SetActive(true);
+        else if (guestServiceUI != null)
+            guestServiceUI.gameObject.SetActive(true);
+        else
+            Debug.LogError("GuestWaveUI: GuestServicePanel nie je priradenÃ½.");
+    }
+
     private void OnEnable()
     {
+        // Pri kaÅ¾dom zapnutÃ­ GuestWaveUI musÃ­ byÅ¥ obsluha skrytÃ¡,
+        // kÃ½m hrÃ¡Ä neprijme aktuÃ¡lnu vlnu.
+        HideGuestServicePanel();
+
         if (waveManager != null)
         {
             waveManager.WaveReadyForDecision += ShowWave;
@@ -92,6 +144,9 @@ public class GuestWaveUI : MonoBehaviour
         currentWaveGuestCount = guests.Count;
         waveDecisionMade = false;
 
+        // PoÄas rozhodovania o vlne sa zobrazuje iba tabuÄ¾ka prÃ­chodu.
+        HideGuestServicePanel();
+
         if (panel != null)
             panel.SetActive(true);
 
@@ -110,8 +165,8 @@ public class GuestWaveUI : MonoBehaviour
         }
 
         Debug.Log(
-            "GuestWaveUI: Zobrazený panel pre " +
-            guests.Count + " hostí."
+            "GuestWaveUI: ZobrazenÃ½ panel pre " +
+            guests.Count + " hostÃ­."
         );
     }
 
@@ -122,14 +177,14 @@ public class GuestWaveUI : MonoBehaviour
 
         if (currentWaveGuestCount <= 0)
         {
-            Debug.LogWarning("Nie sú žiadni hostia na prijatie.");
+            Debug.LogWarning("Nie sÃº Å¾iadni hostia na prijatie.");
             return;
         }
 
         if (guestStayTimer == null || waveManager == null)
         {
             Debug.LogError(
-                "GuestWaveUI: Chýba GuestStayTimer alebo GuestWaveManager."
+                "GuestWaveUI: ChÃ½ba GuestStayTimer alebo GuestWaveManager."
             );
             return;
         }
@@ -139,13 +194,20 @@ public class GuestWaveUI : MonoBehaviour
 
         waveDecisionMade = true;
 
+        // Reset ratings at the start of each accepted wave.
+        if (guestServiceManager != null)
+            guestServiceManager.ResetWaveRatings();
+
         guestStayTimer.StartTimer(currentWaveGuestCount);
 
         if (panel != null)
             panel.SetActive(false);
 
+        // Obsluha sa sprÃ­stupnÃ­ aÅ¾ po ÃºspeÅ¡nom prijatÃ­ vlny.
+        ShowGuestServicePanel();
+
         Debug.Log(
-            "Hostia prijatí. Počet: " + currentWaveGuestCount
+            "Hostia prijatÃ­. PoÄet: " + currentWaveGuestCount
         );
     }
 
@@ -156,14 +218,14 @@ public class GuestWaveUI : MonoBehaviour
 
         if (currentWaveGuestCount <= 0)
         {
-            Debug.LogWarning("Nie sú žiadni hostia na odmietnutie.");
+            Debug.LogWarning("Nie sÃº Å¾iadni hostia na odmietnutie.");
             return;
         }
 
         if (guestStayTimer == null || waveManager == null)
         {
             Debug.LogError(
-                "GuestWaveUI: Chýba GuestStayTimer alebo GuestWaveManager."
+                "GuestWaveUI: ChÃ½ba GuestStayTimer alebo GuestWaveManager."
             );
             return;
         }
@@ -176,11 +238,13 @@ public class GuestWaveUI : MonoBehaviour
         if (panel != null)
             panel.SetActive(false);
 
+        HideGuestServicePanel();
+
         guestStayTimer.StartCooldown(cooldownDuration);
 
         Debug.Log(
-            "Celá vlna bola odmietnutá. " +
-            "Začína 2-minútový cooldown."
+            "CelÃ¡ vlna bola odmietnutÃ¡. " +
+            "ZaÄÃ­na 2-minÃºtovÃ½ cooldown."
         );
     }
 
@@ -191,11 +255,13 @@ public class GuestWaveUI : MonoBehaviour
 
         waveManager.NotifyGuestStayFinished();
 
+        HideGuestServicePanel();
+
         guestStayTimer.StartCooldown(cooldownDuration);
 
         Debug.Log(
-            "Pobyt hostí skončil. " +
-            "Začína cooldown do ďalšej vlny."
+            "Pobyt hostÃ­ skonÄil. " +
+            "ZaÄÃ­na cooldown do ÄalÅ¡ej vlny."
         );
     }
 
@@ -208,8 +274,8 @@ public class GuestWaveUI : MonoBehaviour
             guestStayTimer.HideTimer();
 
         Debug.Log(
-            "Cooldown skončil. " +
-            "Čaká sa na dokončenie odchodu hostí."
+            "Cooldown skonÄil. " +
+            "ÄakÃ¡ sa na dokonÄenie odchodu hostÃ­."
         );
     }
 
@@ -218,7 +284,7 @@ public class GuestWaveUI : MonoBehaviour
         if (rewardManager == null)
         {
             Debug.LogError(
-                "GuestWaveUI: Nie je priradený WaveRewardManager."
+                "GuestWaveUI: Nie je priradenÃ½ WaveRewardManager."
             );
             return;
         }
@@ -232,7 +298,7 @@ public class GuestWaveUI : MonoBehaviour
             rewardPanel.SetActive(true);
 
         Debug.Log(
-            "GuestWaveUI: Zobrazujem výsledky vlny."
+            "GuestWaveUI: Zobrazujem vÃ½sledky vlny."
         );
     }
 
@@ -268,15 +334,50 @@ public class GuestWaveUI : MonoBehaviour
         if (totalResortValueText != null)
             totalResortValueText.text =
                 "Resort Value: +" + rewardManager.TotalResortValue;
+
+        RefreshStarRatingSummary();
     }
 
-    // Pripojené na OnClick tlačidla CLAIM.
+    // PripojenÃ© na OnClick tlaÄidla CLAIM.
+    private void RefreshStarRatingSummary()
+    {
+        if (starRatingSummaryText == null)
+            return;
+
+        if (guestServiceManager == null)
+            guestServiceManager = FindAnyObjectByType<GuestServiceManager>();
+
+        if (guestServiceManager == null)
+        {
+            starRatingSummaryText.text = "WAVE SUMMARY\nNo rating data";
+            return;
+        }
+
+        // TextovÃ© oznaÄenia namiesto symbolov hviezdiÄiek:
+        // Text labels are used instead of star symbols for font compatibility.
+        starRatingSummaryText.text =
+            "<b>GUEST RATING</b>\n" +
+            "5 STARS       " + guestServiceManager.GetRatingCount(5) + "\n" +
+            "4 STARS       " + guestServiceManager.GetRatingCount(4) + "\n" +
+            "3 STARS       " + guestServiceManager.GetRatingCount(3) + "\n" +
+            "2 STARS       " + guestServiceManager.GetRatingCount(2) + "\n" +
+            "1 STAR          " + guestServiceManager.GetRatingCount(1) + "\n" +
+            "--------------------\n" +
+            "<b>TOTAL: " + guestServiceManager.TotalRatings + "</b>\n" +
+            "Below 5 stars: " + guestServiceManager.RatingsBelowFive + "/" +
+            guestServiceManager.TotalRatings + " (" +
+            guestServiceManager.RatingsBelowFivePercentage.ToString("F1") + "%)\n" +
+            (rewardManager != null && rewardManager.RatingPenaltyApplied
+                ? "<color=#FF6B6B><b>REWARD PENALTY: -20%</b></color>"
+                : "<color=#7CFF9B><b>NO REWARD PENALTY</b></color>");
+    }
+
     public void ClaimRewards()
     {
         if (rewardManager == null)
         {
             Debug.LogError(
-                "GuestWaveUI: Nie je priradený WaveRewardManager."
+                "GuestWaveUI: Nie je priradenÃ½ WaveRewardManager."
             );
             return;
         }
@@ -289,7 +390,7 @@ public class GuestWaveUI : MonoBehaviour
                 rewardPanel.SetActive(false);
 
             Debug.Log(
-                "GuestWaveUI: Hráč si vyzdvihol odmeny."
+                "GuestWaveUI: HrÃ¡Ä si vyzdvihol odmeny."
             );
         }
     }
@@ -299,7 +400,7 @@ public class GuestWaveUI : MonoBehaviour
         if (guestList == null || guestRowTemplate == null)
         {
             Debug.LogError(
-                "GuestWaveUI: Chýba GuestList alebo GuestRowTemplate."
+                "GuestWaveUI: ChÃ½ba GuestList alebo GuestRowTemplate."
             );
             return;
         }
@@ -326,7 +427,7 @@ public class GuestWaveUI : MonoBehaviour
         if (nameText == null || needsText == null)
         {
             Debug.LogError(
-                "GuestWaveUI: V GuestRowTemplate chýba " +
+                "GuestWaveUI: V GuestRowTemplate chÃ½ba " +
                 "GuestName alebo GuestNeedsText."
             );
 
@@ -424,7 +525,7 @@ public class GuestWaveUI : MonoBehaviour
             }
 
             needsText.text = activeNeeds.Count > 0
-                ? string.Join(" • ", activeNeeds)
+                ? string.Join(" â¢ ", activeNeeds)
                 : "No active needs";
         }
     }
