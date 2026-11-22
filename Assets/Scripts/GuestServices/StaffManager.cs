@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public class StaffManager : MonoBehaviour
@@ -8,8 +9,15 @@ public class StaffManager : MonoBehaviour
     [SerializeField] private int maxStaff = 20;
     [SerializeField] private int hireCost = 120;
 
+    [Header("FR-16 - Kapacita sluzieb")]
+    [SerializeField, Min(1)] private int capacityBonusPerStaff = 1;
+
     private int totalStaff;
     private int availableStaff;
+
+    // Dlhodobo priradeni zamestnanci (na rozdiel od docasnej obsluhy poziadavky).
+    private readonly Dictionary<GuestNeedType, int> staffByService =
+        new Dictionary<GuestNeedType, int>();
 
     public int TotalStaff => totalStaff;
     public int AvailableStaff => availableStaff;
@@ -22,8 +30,7 @@ public class StaffManager : MonoBehaviour
         get
         {
             ResortResources resources = ResortResources.Instance;
-            return totalStaff < maxStaff &&
-                   resources != null &&
+            return totalStaff < maxStaff && resources != null &&
                    resources.Coins >= hireCost;
         }
     }
@@ -35,10 +42,11 @@ public class StaffManager : MonoBehaviour
         maxStaff = Mathf.Max(1, maxStaff);
         startingStaff = Mathf.Clamp(startingStaff, 0, maxStaff);
         hireCost = Mathf.Max(0, hireCost);
+        capacityBonusPerStaff = Mathf.Max(1, capacityBonusPerStaff);
 
         totalStaff = startingStaff;
         availableStaff = totalStaff;
-
+        staffByService.Clear();
         NotifyChanged();
     }
 
@@ -46,65 +54,114 @@ public class StaffManager : MonoBehaviour
     {
         if (totalStaff >= maxStaff)
         {
-            Debug.Log("Dosiahol si maxim·lny poËet zamestnancov.");
+            Debug.Log("Dosiahol si maximalny pocet zamestnancov.");
             return false;
         }
 
         ResortResources resources = ResortResources.Instance;
-
         if (resources == null)
         {
-            Debug.LogError("StaffManager: ResortResources sa nenaöiel.");
+            Debug.LogError("StaffManager: ResortResources sa nenasiel.");
             return false;
         }
 
         if (!resources.TrySpend(hireCost, 0))
         {
-            Debug.Log("Nem·ö dostatok mincÌ na n·kup zamestnanca.");
+            Debug.Log("Nemas dostatok minci na najatie zamestnanca.");
             return false;
         }
 
         totalStaff++;
         availableStaff++;
-
-        Debug.Log("Zamestnanec bol najat˝. DostupnÌ: " +
-                  availableStaff + "/" + totalStaff);
-
+        Debug.Log("Zamestnanec najaty. Dostupni: " + availableStaff + "/" + totalStaff);
         NotifyChanged();
         return true;
     }
 
+    // Povodne docasne priradenie k JEDNEJ poziadavke hosta.
+    // Tuto metodu GuestServiceUI a GuestServiceManager uz pouzivaju.
     public bool TryAssignStaff()
     {
         if (availableStaff <= 0)
         {
-            Debug.Log("Nem·ö ûiadneho voænÈho zamestnanca.");
+            Debug.Log("Ziadny volny zamestnanec.");
             return false;
         }
 
         availableStaff--;
-
-        Debug.Log("Zamestnanec bol priraden˝. DostupnÌ: " +
-                  availableStaff + "/" + totalStaff);
-
         NotifyChanged();
         return true;
     }
 
+    // Uvolni docasne prideleneho zamestnanca po skonceni obsluhy.
     public void ReleaseStaff()
     {
         if (availableStaff >= totalStaff)
         {
-            Debug.LogWarning("Vöetci zamestnanci s˙ uû voænÌ.");
+            Debug.LogWarning("Vsetci zamestnanci su uz volni.");
             return;
         }
 
         availableStaff++;
-
-        Debug.Log("Zamestnanec je op‰ù dostupn˝. DostupnÌ: " +
-                  availableStaff + "/" + totalStaff);
-
         NotifyChanged();
+    }
+
+    // FR-16: Trvale pridelenie pracownika ku konkretnej sluzbe.
+    // Zamestnanec zostane obsadeny; po skonceni obsluhy sa NEuvolnuje.
+    public bool TryAssignToService(GuestNeedType type)
+    {
+        if (!IsSupportedService(type) || availableStaff <= 0)
+            return false;
+
+        availableStaff--;
+        staffByService[type] = GetAssignedStaffToService(type) + 1;
+
+        Debug.Log("FR-16: Priradeny zamestnanec k " + type +
+                  ". Pocet: " + staffByService[type] +
+                  ", volna kapacita personalu: " + availableStaff);
+        NotifyChanged();
+        return true;
+    }
+
+    public int GetAssignedStaffToService(GuestNeedType type)
+    {
+        return staffByService.TryGetValue(type, out int count) ? count : 0;
+    }
+
+    public int GetServiceCapacity(GuestNeedType type, int baseCapacity = 0)
+    {
+        int staffCount = GetAssignedStaffToService(type);
+        return Mathf.Max(0, baseCapacity) +
+               staffCount * Mathf.Max(1, capacityBonusPerStaff);
+    }
+
+    private static bool IsSupportedService(GuestNeedType type)
+    {
+        return type == GuestNeedType.Food ||
+               type == GuestNeedType.Drink ||
+               type == GuestNeedType.Relax;
+    }
+
+    // Iba pre overenie FR-16 v Unity Inspectore pocas Play Mode.
+    [ContextMenu("FR-16 / TEST / Priradit do restauracie")]
+    private void TestAssignFood()
+    {
+        if (!Application.isPlaying) return;
+        TryAssignToService(GuestNeedType.Food);
+    }
+
+    [ContextMenu("FR-16 / TEST / Priradit do baru")]
+    private void TestAssignDrink()
+    {
+        if (!Application.isPlaying) return;
+        TryAssignToService(GuestNeedType.Drink);
+    }
+
+    [ContextMenu("FR-16 / TEST / Priradit do relax sluzby")]
+    private void TestAssignRelax()
+    {
+        if (!Application.isPlaying) return;
+        TryAssignToService(GuestNeedType.Relax);
     }
 
     private void NotifyChanged()
