@@ -66,6 +66,7 @@ public abstract class BuildSpot : MonoBehaviour
     // 0 = ešte nepostavená, 1..maxLevel = úroveň budovy
     public int Level { get; private set; }
     public bool IsBuilt => Level > 0;
+    public int MaxLevel => maxLevel;
 
     // Volá sa po postavení (1) a po každom vylepšení (2, 3).
     public event Action<int> LevelChanged;

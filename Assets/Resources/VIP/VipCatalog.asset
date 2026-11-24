@@ -1,0 +1,201 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 658c3aaa9f3b4eceb962b8fdfc9b113f, type: 3}
+  m_Name: VipCatalog
+  m_EditorClassIdentifier: 
+  personalities:
+  - id: travel_vlogger
+    displayName: "Lea Nováková"
+    profession: "Cestovateľská vloggerka"
+    description: "Natáča videá z exotických miest pre pol milióna sledovateľov. Stačí jej útulný hotel a pekný výhľad."
+    rarity: 0
+    inviteCost: 120
+    requiredResortValue: 15
+    buildingRequirements:
+    - building: 0
+      minLevel: 2
+      requireMaxLevel: 0
+    rewardMultiplier: 1.2
+    portrait: {fileID: 21300000, guid: 0e88efd3076e4c41b2796dcaedffa18c, type: 3}
+    model: {fileID: 919132149155446097, guid: 22e76026404d4db29c27d68cdb6b6fed, type: 3}
+    rig: {fileID: 4900000, guid: ace75674ee30455c839dd12ee32f4273, type: 3}
+  - id: nature_photographer
+    displayName: "Tomáš Horák"
+    profession: "Fotograf prírody"
+    description: "Fotí západy slnka a tropickú prírodu pre cestovné magazíny. Po celodennom fotení si rád dá drink."
+    rarity: 0
+    inviteCost: 160
+    requiredResortValue: 25
+    buildingRequirements:
+    - building: 0
+      minLevel: 2
+      requireMaxLevel: 0
+    - building: 2
+      minLevel: 2
+      requireMaxLevel: 0
+    rewardMultiplier: 1.3
+    portrait: {fileID: 21300000, guid: 6bf03131ea274c748acde76af8087dd7, type: 3}
+    model: {fileID: 919132149155446097, guid: 1e6bdd9ff425410189c805f99a7b5d05, type: 3}
+    rig: {fileID: 4900000, guid: 18faf23cae414aceae4123729699a499, type: 3}
+  - id: fitness_influencer
+    displayName: "Mia Sunny"
+    profession: "Fitness influencerka"
+    description: "Ranné cvičenie, zdravé smoothie a stories pri bazéne. Bez bazéna nepríde."
+    rarity: 0
+    inviteCost: 220
+    requiredResortValue: 35
+    buildingRequirements:
+    - building: 3
+      minLevel: 1
+      requireMaxLevel: 0
+    rewardMultiplier: 1.4
+    portrait: {fileID: 21300000, guid: e4dc209d30a0406ebba4b3669f99d041, type: 3}
+    model: {fileID: 919132149155446097, guid: 976ee54301154e5bb54a1a316f7728b9, type: 3}
+    rig: {fileID: 4900000, guid: 0cd2b37f72524401adc040c4ba7a5f00, type: 3}
+  - id: food_blogger
+    displayName: "Kenji Mori"
+    profession: "Food bloger"
+    description: "Hodnotí reštaurácie po celom svete. Jeho recenzia vie rezortu priniesť zástupy hostí."
+    rarity: 1
+    inviteCost: 350
+    requiredResortValue: 60
+    buildingRequirements:
+    - building: 1
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 0
+      minLevel: 3
+      requireMaxLevel: 0
+    rewardMultiplier: 1.7
+    portrait: {fileID: 21300000, guid: 1c24944fc4794b0eb30f09f27db042bc, type: 3}
+    model: {fileID: 919132149155446097, guid: f4e9fbc79c1d407785dcabc8f879fc76, type: 3}
+    rig: {fileID: 4900000, guid: 793d3ee5d65e4044afdc744f7453aae9, type: 3}
+  - id: dj_nova
+    displayName: "DJ Nova"
+    profession: "DJ a hudobný producent"
+    description: "Hrá na najväčších plážových párty. Chce špičkový bar a bazén na after party."
+    rarity: 1
+    inviteCost: 420
+    requiredResortValue: 80
+    buildingRequirements:
+    - building: 2
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 3
+      minLevel: 2
+      requireMaxLevel: 0
+    rewardMultiplier: 1.8
+    portrait: {fileID: 21300000, guid: 77f83a8b27084b048faff95396090cb5, type: 3}
+    model: {fileID: 919132149155446097, guid: 50ecc45ac4c94f87bff34eaf4711136c, type: 3}
+    rig: {fileID: 4900000, guid: 47f22a71a2ec4b0ea6587d00266d4ea2, type: 3}
+  - id: bestseller_writer
+    displayName: "Eva Kráľová"
+    profession: "Spisovateľka bestsellerov"
+    description: "Na ostrov prichádza dopísať novú knihu. Potrebuje pokoj, wellness a pohodlný hotel."
+    rarity: 1
+    inviteCost: 480
+    requiredResortValue: 100
+    buildingRequirements:
+    - building: 4
+      minLevel: 1
+      requireMaxLevel: 0
+    - building: 0
+      minLevel: 3
+      requireMaxLevel: 0
+    rewardMultiplier: 2.0
+    portrait: {fileID: 21300000, guid: d65003896d2a45bba8d9cc20c3b52479, type: 3}
+    model: {fileID: 919132149155446097, guid: 72c5732e54674def8ce045fc0c407320, type: 3}
+    rig: {fileID: 4900000, guid: 9af9385b1afd469798e36e59e5e4a888, type: 3}
+  - id: football_star
+    displayName: "Diego Santos"
+    profession: "Futbalová hviezda"
+    description: "Kapitán reprezentácie si užíva dovolenku po sezóne. Očakáva luxusný hotel a najlepší bazén."
+    rarity: 2
+    inviteCost: 750
+    requiredResortValue: 150
+    buildingRequirements:
+    - building: 0
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 3
+      minLevel: 1
+      requireMaxLevel: 1
+    rewardMultiplier: 2.4
+    portrait: {fileID: 21300000, guid: e4691c2f5ac549eaacce9a8774d4d406, type: 3}
+    model: {fileID: 919132149155446097, guid: ea19a108a21f4d57b9f4d5fe79f417e2, type: 3}
+    rig: {fileID: 4900000, guid: c5ff872c452c41baa48584d1cc18422f, type: 3}
+  - id: celebrity_chef
+    displayName: "Marco Bellini"
+    profession: "Celebrity šéfkuchár"
+    description: "Majiteľ ocenených reštaurácií a hviezda kulinárskych show. Skontroluje každú kuchyňu aj bar."
+    rarity: 2
+    inviteCost: 850
+    requiredResortValue: 180
+    buildingRequirements:
+    - building: 0
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 1
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 2
+      minLevel: 1
+      requireMaxLevel: 1
+    rewardMultiplier: 2.6
+    portrait: {fileID: 21300000, guid: e9dd7439393e44d0bfd952e04ad23fec, type: 3}
+    model: {fileID: 919132149155446097, guid: d88d79d500cc46daa3c3b6694b9c7bee, type: 3}
+    rig: {fileID: 4900000, guid: 687c5cd747fc47fa9de620025088551f, type: 3}
+  - id: movie_star
+    displayName: "Isabella Moreau"
+    profession: "Filmová herečka"
+    description: "Hviezda veľkých filmov hľadá súkromie a relax. Prijme len luxusný hotel s najlepším wellness."
+    rarity: 2
+    inviteCost: 1000
+    requiredResortValue: 220
+    buildingRequirements:
+    - building: 0
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 4
+      minLevel: 1
+      requireMaxLevel: 1
+    rewardMultiplier: 2.8
+    portrait: {fileID: 21300000, guid: e3df48022a81438ea60e38b6b5cec56d, type: 3}
+    model: {fileID: 919132149155446097, guid: dcab10025e5040b58a44e4d179a0a244, type: 3}
+    rig: {fileID: 4900000, guid: 3116b4c043cd44ada07cc0ed7b752941, type: 3}
+  - id: pop_star
+    displayName: "Aurora Star"
+    profession: "Popová hviezda"
+    description: "Najznámejšia speváčka sveta. Jej návšteva preslávi rezort - ale všetko musí byť dokonalé."
+    rarity: 3
+    inviteCost: 1600
+    requiredResortValue: 350
+    buildingRequirements:
+    - building: 0
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 1
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 2
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 3
+      minLevel: 1
+      requireMaxLevel: 1
+    - building: 4
+      minLevel: 1
+      requireMaxLevel: 1
+    rewardMultiplier: 3.5
+    portrait: {fileID: 21300000, guid: 60b30325b6a3465581d6cd4f94d41760, type: 3}
+    model: {fileID: 919132149155446097, guid: 3e07b1a842004740a0fa10321008689f, type: 3}
+    rig: {fileID: 4900000, guid: a46773336be04edb8a6b456bce126f3f, type: 3}
