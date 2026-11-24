@@ -465,7 +465,8 @@ public class UpgradePopup : MonoBehaviour
     // =====================================================================
     // Sprity kreslené v kóde (rovnaký postup ako ResourceHud.BarSprite)
     // =====================================================================
-    static class Sprites
+    // internal: rovnaké sprity používa aj okno VIP hostí (VipInvitePopup, FR-31).
+    internal static class Sprites
     {
         static Sprite panel, bar, barShort, levelBox, levelBoxNext, green, gray, woodButton, arrow;
 
@@ -497,7 +498,7 @@ public class UpgradePopup : MonoBehaviour
         }
 
         // Zaoblený obdĺžnik: výplň s prechodom zdola nahor, okraj (horná polovica svetlejšia).
-        static Sprite RoundRect(int width, int height, float radius, float rim,
+        internal static Sprite RoundRect(int width, int height, float radius, float rim,
                                 Color fillBottom, Color fillTop, Color rimDark, Color rimLight)
         {
             var tex = NewTexture(width, height);

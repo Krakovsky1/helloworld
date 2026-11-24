@@ -199,3 +199,8 @@ MonoBehaviour:
     portrait: {fileID: 21300000, guid: 60b30325b6a3465581d6cd4f94d41760, type: 3}
     model: {fileID: 919132149155446097, guid: 3e07b1a842004740a0fa10321008689f, type: 3}
     rig: {fileID: 4900000, guid: a46773336be04edb8a6b456bce126f3f, type: 3}
+  offerSize: 3
+  commonWeight: 55
+  rareWeight: 30
+  epicWeight: 12
+  legendaryWeight: 3

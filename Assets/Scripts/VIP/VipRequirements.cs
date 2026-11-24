@@ -5,7 +5,7 @@ using UnityEngine;
 //  - dosť mincí (cena pozvania),
 //  - hodnota rezortu aspoň requiredResortValue,
 //  - úrovne budov (Hotel / Reštaurácia / Bar cez BuildingUpgradeManager, Bazén / Wellness cez BuildSpot).
-// Mince sa tu neodpočítavajú - to spraví až pozvanie (ďalší tiket).
+// Mince sa tu neodpočítavajú - to robí až pozvanie (VipInviteManager.TryInvite, FR-31).
 public static class VipRequirements
 {
     public static bool CanInvite(VipPersonality vip)

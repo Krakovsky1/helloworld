@@ -31,12 +31,6 @@ public class BottleneckMonitor : MonoBehaviour
     [Tooltip("bottleneck_hysteresis_s: ako dlho musí rad rásť, kým sa zobrazí varovanie (TUNING)")]
     [SerializeField, Min(0f)] float hysteresisSeconds = 3f;
 
-    [Tooltip("Počet miest budovy pre testovací panel (Lv1 = 3 miesta podľa build dokumentu)")]
-    [SerializeField, Min(1)] int testCapacity = 3;
-
-    [Tooltip("Testovací panel vľavo dole (len v editore a development builde)")]
-    public bool showDebugPanel = true;
-
     class Entry
     {
         public int queue;
@@ -243,55 +237,4 @@ public class BottleneckMonitor : MonoBehaviour
         e.growTimer = 0f;
         StateChanged?.Invoke(service, state);
     }
-
-#if UNITY_EDITOR || DEVELOPMENT_BUILD
-    // ---------------- testovací panel (kým FR-06 neposiela skutočné rady) ----------------
-    void OnGUI()
-    {
-        if (!showDebugPanel) return;
-
-        float scale = Screen.height / 1080f;
-        var oldMatrix = GUI.matrix;
-        GUI.matrix = Matrix4x4.Scale(new Vector3(scale, scale, 1f));
-
-        float width = 470f;
-        float height = 74f + entries.Length * 34f;
-        float y = Screen.height / scale - height - 20f;
-
-        GUILayout.BeginArea(new Rect(20f, y, width, height), "FR-08 test: hostia pri službách (prah radu " + bottleneckThreshold + ")", GUI.skin.window);
-        foreach (var s in BottleneckServiceInfo.All)
-        {
-            var e = entries[(int)s];
-            GUILayout.BeginHorizontal();
-            string seats = e.capacity < 0 ? "" : e.occupied + "/" + e.capacity + " miest, ";
-            GUILayout.Label(BottleneckServiceInfo.BuildingName(s) + ": " + seats + e.queue + " čaká", GUILayout.Width(300f));
-            if (e.state == BottleneckState.Locked)
-            {
-                if (GUILayout.Button("Odomknúť")) SetLocked(s, false);
-            }
-            else
-            {
-                int guests = e.occupied + e.queue;
-                if (GUILayout.Button("-")) SimulateGuests(s, guests - 1);
-                if (GUILayout.Button("+")) SimulateGuests(s, guests + 1);
-                if (GUILayout.Button("+5")) SimulateGuests(s, guests + 5);
-            }
-            GUILayout.EndHorizontal();
-        }
-        if (GUILayout.Button("Reset (koniec vlny)")) ResetAll();
-        GUILayout.EndArea();
-
-        GUI.matrix = oldMatrix;
-    }
-
-    // Test: hostia pri službe najprv obsadia miesta, zvyšok čaká v rade.
-    void SimulateGuests(BottleneckService service, int guests)
-    {
-        var e = entries[(int)service];
-        int capacity = e.capacity < 0 ? testCapacity : e.capacity;
-        guests = Mathf.Max(0, guests);
-        ReportSeats(service, Mathf.Min(guests, capacity), capacity);
-        ReportQueue(service, guests - Mathf.Min(guests, capacity));
-    }
-#endif
 }
