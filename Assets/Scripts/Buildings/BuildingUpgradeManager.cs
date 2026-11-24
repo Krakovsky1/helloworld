@@ -76,6 +76,15 @@ public class BuildingUpgradeManager : MonoBehaviour
     // Úroveň hotela (hlavnej budovy); 0 ak sa hotel nenašiel.
     public int HotelLevel => GetLevel(HotelLabel);
 
+    // Najvyššia úroveň budovy (počet modelov v Inspectore); 0 ak sa budova nenašla.
+    public int GetMaxLevel(string label)
+    {
+        foreach (var b in buildings)
+            if (b.instance != null && b.type.label == label)
+                return b.type.levels != null ? b.type.levels.Length : 1;
+        return 0;
+    }
+
     // Ak budova (okrem hotela) nemôže ísť na úroveň targetLevel, vráti dôvod pre hráča; inak null.
     public string LevelLimitReason(string label, int targetLevel)
     {
