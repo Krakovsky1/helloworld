@@ -11,7 +11,29 @@ public class VipCatalog : ScriptableObject
 
     [SerializeField] List<VipPersonality> personalities = new List<VipPersonality>();
 
+    [Header("FR-31: Ponuka VIP hostí (tlačidlo VIP)")]
+    [Tooltip("Koľko náhodných VIP hostí sa ponúkne naraz")]
+    [Min(1)] [SerializeField] int offerSize = 3;
+    [Tooltip("Šanca vzácnosti v ponuke (relatívna váha). Bežná sa ukazuje najčastejšie, Legendárna najmenej.")]
+    [Min(0f)] [SerializeField] float commonWeight = 55f;
+    [Min(0f)] [SerializeField] float rareWeight = 30f;
+    [Min(0f)] [SerializeField] float epicWeight = 12f;
+    [Min(0f)] [SerializeField] float legendaryWeight = 3f;
+
     public IReadOnlyList<VipPersonality> Personalities => personalities;
+    public int OfferSize => Mathf.Max(1, offerSize);
+
+    // Relatívna váha vzácnosti pri losovaní ponuky (FR-31).
+    public float RarityWeight(VipRarity rarity)
+    {
+        switch (rarity)
+        {
+            case VipRarity.Common: return Mathf.Max(0f, commonWeight);
+            case VipRarity.Rare: return Mathf.Max(0f, rareWeight);
+            case VipRarity.Epic: return Mathf.Max(0f, epicWeight);
+            default: return Mathf.Max(0f, legendaryWeight);
+        }
+    }
 
     static VipCatalog cached;
 

@@ -5,7 +5,7 @@ using UnityEngine;
 // FR-37: Rôzne typy VIP osobností.
 // Jedna VIP osobnosť = meno, profesia, vzácnosť, podmienky na pozvanie a odmena (násobiteľ).
 // Všetky osobnosti sú v jednom súbore Assets/Resources/VIP/VipCatalog.asset (dajú sa upraviť v Inspectore).
-// Samotné pozývanie (UI, príchod loďou) príde v ďalšom tikete; podmienky už vie overiť VipRequirements.
+// Pozývanie: tlačidlo VIP (FR-31, VipInviteManager + VipInvitePopup). Podmienky overuje VipRequirements.
 
 public enum VipRarity
 {
