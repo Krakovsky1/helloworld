@@ -19,6 +19,7 @@ public class GuestServiceManager : MonoBehaviour
         public float CreatedAt { get; private set; }
         public int Stars { get; set; }
         public bool IsAssigned { get; set; }
+        public float ServiceEndsAt { get; set; }   // FR-39: kedy obsluha skončí (Time.time)
 
         public GuestNeedType Type => Need.Type;
 
@@ -74,6 +75,21 @@ public class GuestServiceManager : MonoBehaviour
                 total += ratingCounts[stars];
             return total;
         }
+    }
+
+    // FR-39: uloženie a obnova hodnotení aktuálnej vlny (index 1..5 = počet hviezdičiek).
+    public int[] CaptureRatings()
+    {
+        return (int[])ratingCounts.Clone();
+    }
+
+    public void RestoreRatings(int[] saved)
+    {
+        if (saved == null)
+            return;
+
+        for (int stars = 1; stars <= 5 && stars < saved.Length; stars++)
+            ratingCounts[stars] = Mathf.Max(0, saved[stars]);
     }
 
     public void ResetWaveRatings()
@@ -183,7 +199,8 @@ public class GuestServiceManager : MonoBehaviour
 
         OnRatingRecorded?.Invoke(request.Stars);
 
-        Coroutine routine = StartCoroutine(CompleteService(request));
+        request.ServiceEndsAt = Time.time + serviceDuration;
+        Coroutine routine = StartCoroutine(CompleteService(request, serviceDuration));
         runningServices.Add(request, routine);
 
         OnRequestsChanged?.Invoke();
@@ -191,9 +208,59 @@ public class GuestServiceManager : MonoBehaviour
         return true;
     }
 
-    private IEnumerator CompleteService(ServiceRequest request)
+    // FR-39: priradená obsluha potreby (hodnotenie a zostávajúci čas) - pre uloženie hry.
+    public bool TryGetAssignment(GuestNeed need, out int stars, out float remaining)
     {
-        yield return new WaitForSeconds(serviceDuration);
+        foreach (ServiceRequest request in activeRequests)
+        {
+            if (request.Need != need || !request.IsAssigned)
+                continue;
+
+            stars = request.Stars;
+            remaining = Mathf.Max(0f, request.ServiceEndsAt - Time.time);
+            return true;
+        }
+
+        stars = 0;
+        remaining = 0f;
+        return false;
+    }
+
+    // FR-39: obnova priradenej obsluhy po načítaní - zamestnanec je znova obsadený a obsluha
+    // dobehne o zostávajúci čas. Hodnotenie sa nepripočíta znova (obnovuje sa cez RestoreRatings).
+    public bool RestoreAssignment(GuestNeed need, int stars, float remaining)
+    {
+        ServiceRequest request = null;
+        foreach (ServiceRequest r in activeRequests)
+        {
+            if (r.Need == need)
+            {
+                request = r;
+                break;
+            }
+        }
+
+        if (request == null || request.IsAssigned)
+            return false;
+
+        if (staffManager == null || !staffManager.TryAssignStaff())
+            return false;
+
+        request.IsAssigned = true;
+        request.Stars = Mathf.Clamp(stars, 1, 5);
+        float duration = Mathf.Max(0.1f, remaining);
+        request.ServiceEndsAt = Time.time + duration;
+
+        Coroutine routine = StartCoroutine(CompleteService(request, duration));
+        runningServices.Add(request, routine);
+
+        OnRequestsChanged?.Invoke();
+        return true;
+    }
+
+    private IEnumerator CompleteService(ServiceRequest request, float duration)
+    {
+        yield return new WaitForSeconds(duration);
 
         if (request.Guest != null && request.Need != null)
         {

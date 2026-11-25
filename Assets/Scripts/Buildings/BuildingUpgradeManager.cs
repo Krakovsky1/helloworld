@@ -414,6 +414,7 @@ public class BuildingUpgradeManager : MonoBehaviour
         b.construction = new Construction(targetLevel, seconds);
         b.punch = 1f;
         if (b.construction.IsDone) CompleteUpgrade(b);
+        SaveManager.RequestSave();   // FR-39: začiatok stavby
         return true;
     }
 
@@ -445,9 +446,21 @@ public class BuildingUpgradeManager : MonoBehaviour
         if (b.instance == null) return;
 
         int nextIndex = b.level + 1;
-        if (nextIndex >= b.type.levels.Length || b.type.levels[nextIndex] == null) return;
+        if (!SwapToLevel(b, nextIndex)) return;
 
-        var next = b.type.levels[nextIndex];
+        b.punch = 1f;
+        Debug.Log(b.type.label + ": stavba hotová - úroveň " + (b.level + 1) + "/" + b.type.levels.Length);
+        SaveManager.RequestSave();   // FR-39: koniec stavby
+    }
+
+    // Vymení model budovy za úroveň levelIndex (0 = Level 1). Vráti false, ak model chýba.
+    bool SwapToLevel(Building b, int levelIndex)
+    {
+        if (b.instance == null || b.type.levels == null) return false;
+        if (levelIndex < 0 || levelIndex >= b.type.levels.Length || b.type.levels[levelIndex] == null) return false;
+        if (levelIndex == b.level) return true;
+
+        var next = b.type.levels[levelIndex];
         var old = b.instance.transform;
         var upgraded = Instantiate(next, old.position, old.rotation, old.parent);
         upgraded.name = next.name;
@@ -455,11 +468,50 @@ public class BuildingUpgradeManager : MonoBehaviour
         Destroy(b.instance);
 
         b.instance = upgraded;
-        b.level = nextIndex;
+        b.level = levelIndex;
         b.anchor = AnchorFor(upgraded);
-        b.punch = 1f;
         UpdateLabel(b);
-        Debug.Log(b.type.label + ": stavba hotová - úroveň " + (b.level + 1) + "/" + b.type.levels.Length);
+        return true;
+    }
+
+    // ---------------------------------------------------------------- FR-39: uloženie hry
+
+    // Úrovne a prebiehajúce stavby všetkých budov (Hotel, Restaurant, Bar).
+    public void CaptureSave(List<BuildingSave> into)
+    {
+        foreach (var b in buildings)
+        {
+            if (b.instance == null) continue;
+            var save = new BuildingSave { label = b.type.label, level = b.level + 1 };
+            if (b.construction != null)
+            {
+                save.constructionTarget = b.construction.targetLevel;
+                save.constructionDuration = b.construction.duration;
+                save.constructionEndUnix = b.construction.EndUnixForSave;
+            }
+            into.Add(save);
+        }
+    }
+
+    // Obnoví úroveň (model) a prebiehajúcu stavbu. Ak stavba medzitým skončila, dokončí sa hneď,
+    // ako je známy čas servera (napr. hru zavrieš a vrátiš sa na druhý deň).
+    public void RestoreSave(List<BuildingSave> saved)
+    {
+        if (saved == null) return;
+        foreach (var s in saved)
+        {
+            foreach (var b in buildings)
+            {
+                if (b.instance == null || b.type.label != s.label) continue;
+
+                SwapToLevel(b, Mathf.Clamp(s.level - 1, 0, b.type.levels.Length - 1));
+                b.construction = null;
+                if (s.constructionTarget > b.level + 1)
+                    b.construction = new Construction(s.constructionTarget, s.constructionDuration, s.constructionEndUnix);
+                b.shownLabel = null;
+                break;
+            }
+        }
     }
 
     // Počas stavby: "Stavba 0:45" pod ikonkou (zlatou farbou).

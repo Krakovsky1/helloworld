@@ -10,6 +10,11 @@ public class GuestNeedsGenerator : MonoBehaviour
 
     private GuestNeeds guestNeeds;
     private Coroutine generationRoutine;
+    private float nextNeedAt = -1f;
+
+    // FR-39: o koľko sekúnd príde ďalšia potreba (-1 = generátor nebeží).
+    public float SecondsToNextNeed =>
+        generationRoutine != null && nextNeedAt >= 0f ? Mathf.Max(0f, nextNeedAt - Time.time) : -1f;
 
     private readonly GuestNeedType[] availableNeeds =
     {
@@ -35,6 +40,19 @@ public class GuestNeedsGenerator : MonoBehaviour
         generationRoutine = StartCoroutine(GenerateNeedsOverTime());
     }
 
+    // FR-39: pokračovanie po načítaní uloženej hry - bez okamžitej novej potreby,
+    // prvá ďalšia príde o firstDelay sekúnd (ako pred uložením).
+    public void ResumeGenerating(float firstDelay)
+    {
+        if (generationRoutine != null)
+            return;
+
+        if (guestNeeds == null)
+            guestNeeds = GetComponent<GuestNeeds>();
+
+        generationRoutine = StartCoroutine(GenerateNeedsOverTime(firstDelay));
+    }
+
     public void StopGenerating()
     {
         if (generationRoutine == null)
@@ -44,14 +62,16 @@ public class GuestNeedsGenerator : MonoBehaviour
         generationRoutine = null;
     }
 
-    private IEnumerator GenerateNeedsOverTime()
+    private IEnumerator GenerateNeedsOverTime(float firstDelay = -1f)
     {
         while (true)
         {
             float min = Mathf.Max(1f, minIntervalSeconds);
             float max = Mathf.Max(min, maxIntervalSeconds);
-            float interval = Random.Range(min, max);
+            float interval = firstDelay >= 0f ? firstDelay : Random.Range(min, max);
+            firstDelay = -1f;
 
+            nextNeedAt = Time.time + interval;
             yield return new WaitForSeconds(interval);
             GenerateRandomNeed();
         }

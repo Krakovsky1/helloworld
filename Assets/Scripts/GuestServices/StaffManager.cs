@@ -107,6 +107,17 @@ public class StaffManager : MonoBehaviour
         NotifyChanged();
     }
 
+    // FR-39: obnova z ulozenej hry - pocet najatych zamestnancov (vsetci su po nacitani volni).
+    public void RestoreStaff(int savedTotal)
+    {
+        if (savedTotal < 0)
+            return;
+
+        totalStaff = Mathf.Clamp(savedTotal, 0, maxStaff);
+        availableStaff = totalStaff;
+        NotifyChanged();
+    }
+
     private void NotifyChanged()
     {
         OnStaffChanged?.Invoke();
