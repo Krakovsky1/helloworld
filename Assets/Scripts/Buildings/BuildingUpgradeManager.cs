@@ -8,6 +8,9 @@ using UnityEngine.UI;
 // (napr. BeachHotel_L1 -> BeachHotel_L2). Upgrade stojí mince a energiu (ResortResources).
 // Budovy sa v scéne hľadajú podľa mena modelu medzi koreňovými objektmi scény,
 // takže netreba nič ručne priraďovať na budovy.
+// FR-29: vylepšenie sa dá zaplatiť aj drahokamami (namiesto mincí) a trvá nejaký čas (BuildTimers).
+// Počas stavby ikonka ukazuje odpočet; klik otvorí okno s možnosťou okamžite dokončiť za drahokamy.
+// Nový model sa objaví až po dokončení stavby.
 public class BuildingUpgradeManager : MonoBehaviour
 {
     [Serializable]
@@ -32,6 +35,8 @@ public class BuildingUpgradeManager : MonoBehaviour
     [SerializeField] float iconSize = 78f;
     [Tooltip("O koľko metrov nad strechou budovy sa ikonka zobrazí")]
     [SerializeField] float heightAboveBuilding = 0.8f;
+    [Tooltip("Posun ikonky na obrazovke (px pri 1920x1080), záporné = nižšie")]
+    [SerializeField] float iconOffsetY = -22f;
 
     static readonly Color TextColor = new Color(1f, 0.97f, 0.88f, 1f);
     static readonly Color ShortColor = new Color(1f, 0.42f, 0.38f, 1f);
@@ -52,6 +57,8 @@ public class BuildingUpgradeManager : MonoBehaviour
         public Vector3 anchor;
         public float punch;
         public float shake;
+        public Construction construction;   // FR-29: prebiehajúca stavba (null = nestavia sa)
+        public string shownLabel;
     }
 
     readonly List<Building> buildings = new List<Building>();
@@ -271,8 +278,10 @@ public class BuildingUpgradeManager : MonoBehaviour
 
     static void UpdateLabel(Building b)
     {
-        bool isMax = b.level + 1 >= b.type.levels.Length;
-        b.levelText.text = (isMax ? "MAX Level" : ("Level " + (b.level + 1)));
+        // Pod ikonkou sa úroveň nepíše (je v okne vylepšenia); text sa ukáže len počas stavby (odpočet).
+        b.levelText.text = "";
+        b.levelText.color = TextColor;
+        b.shownLabel = null;
         //b.costRow.SetActive(!isMax);
         b.costRow.SetActive(false);
         b.coinCost = CostAt(b.type.upgradeCoins, b.level);
@@ -299,6 +308,7 @@ public class BuildingUpgradeManager : MonoBehaviour
     }
 
     // FR-22: klik na ikonku -> okno s cenou a úrovňou. Upgrade sa spraví až tlačidlom VYLEPŠIŤ.
+    // FR-29: počas stavby okno ukazuje odpočet a tlačidlo DOKONČIŤ za drahokamy.
     void OpenPopup(Building b)
     {
         if (b.instance == null) return;
@@ -316,13 +326,29 @@ public class BuildingUpgradeManager : MonoBehaviour
             coinCost = b.coinCost,
             energyCost = b.energyCost,
             blockedReason = LevelLimitReason(b.type.label, b.level + 2),
+            gemCost = BuildTimers.GemPrice(b.coinCost, b.energyCost),
+            buildSeconds = BuildTimers.DurationSeconds(b.level + 2),
+            construction = b.construction,
         };
 
-        popup.Show(info, () =>
+        if (b.construction != null)
         {
-            if (Upgrade(b)) popup.Close();
-            else popup.Refresh();
-        });
+            popup.Show(info, null, null, () => SpeedUp(b));
+            return;
+        }
+
+        popup.Show(info, () => OnBuyClicked(b, false), () => OnBuyClicked(b, true), null);
+    }
+
+    // Po zaplatení sa okno prepne na odpočet stavby (s možnosťou urýchlenia).
+    void OnBuyClicked(Building b, bool withGems)
+    {
+        if (StartUpgrade(b, withGems))
+        {
+            popup.Close();
+            if (b.construction != null) OpenPopup(b);
+        }
+        else popup.Refresh();
     }
 
     // Slovenský názov budovy do okna (label v Inspectore je "Hotel" / "Restaurant" / "Bar").
@@ -336,10 +362,11 @@ public class BuildingUpgradeManager : MonoBehaviour
         }
     }
 
-    // Vráti true, ak sa budova naozaj vylepšila.
-    bool Upgrade(Building b)
+    // FR-29: Zaplatí vylepšenie (mincami alebo drahokamami + energia) a spustí stavbu na čas.
+    // Vráti true, ak sa stavba začala (alebo hneď dokončila, ak trvá 0 s).
+    bool StartUpgrade(Building b, bool withGems)
     {
-        if (b.instance == null) return false;
+        if (b.instance == null || b.construction != null) return false;
 
         int nextIndex = b.level + 1;
         if (nextIndex >= b.type.levels.Length || b.type.levels[nextIndex] == null)
@@ -365,13 +392,60 @@ public class BuildingUpgradeManager : MonoBehaviour
             return false;
         }
 
-        if (!res.TrySpend(b.coinCost, b.energyCost))
+        int gemCost = BuildTimers.GemPrice(b.coinCost, b.energyCost);
+        // Pri platbe drahokamami sa energia neplatí (drahokamy sú preto drahšie).
+        bool paid = withGems ? res.TrySpendGems(gemCost) : res.TrySpend(b.coinCost, b.energyCost);
+        if (!paid)
         {
             b.shake = 1f;
-            Debug.Log(b.type.label + ": nedostatok zdrojov. Treba " + b.coinCost + " mincí a " + b.energyCost +
-                      " energie, máš " + res.Coins + " a " + res.Energy + ".");
+            if (withGems)
+                Debug.Log(b.type.label + ": nedostatok drahokamov. Treba " + gemCost + ", máš " + res.Gems + ".");
+            else
+                Debug.Log(b.type.label + ": nedostatok zdrojov. Treba " + b.coinCost + " mincí a " + b.energyCost +
+                          " energie, máš " + res.Coins + " a " + res.Energy + ".");
             return false;
         }
+
+        int targetLevel = nextIndex + 1;
+        int seconds = BuildTimers.DurationSeconds(targetLevel);
+        Debug.Log(b.type.label + ": stavba Level " + targetLevel + " začala (" + BuildTimers.FormatDuration(seconds) + ", -" +
+                  (withGems ? gemCost + " drahokamov" : b.coinCost + " mincí, -" + b.energyCost + " energie") + ")");
+
+        b.construction = new Construction(targetLevel, seconds);
+        b.punch = 1f;
+        if (b.construction.IsDone) CompleteUpgrade(b);
+        return true;
+    }
+
+    // FR-29: Okamžité dokončenie stavby za drahokamy.
+    void SpeedUp(Building b)
+    {
+        var c = b.construction;
+        if (c == null) return;
+
+        int cost = c.SpeedUpCost;
+        var res = ResortResources.Instance;
+        if (res == null || !res.TrySpendGems(cost))
+        {
+            b.shake = 1f;
+            popup.Refresh();
+            return;
+        }
+
+        Debug.Log(b.type.label + ": stavba urýchlená za " + cost + " drahokamov.");
+        CompleteUpgrade(b);
+    }
+
+    // Stavba je hotová: vymení model za ďalšiu úroveň.
+    void CompleteUpgrade(Building b)
+    {
+        var c = b.construction;
+        b.construction = null;
+        if (popup != null && popup.IsShowing(c)) popup.Close();
+        if (b.instance == null) return;
+
+        int nextIndex = b.level + 1;
+        if (nextIndex >= b.type.levels.Length || b.type.levels[nextIndex] == null) return;
 
         var next = b.type.levels[nextIndex];
         var old = b.instance.transform;
@@ -385,20 +459,44 @@ public class BuildingUpgradeManager : MonoBehaviour
         b.anchor = AnchorFor(upgraded);
         b.punch = 1f;
         UpdateLabel(b);
-        Debug.Log(b.type.label + ": upgrade na úroveň " + (b.level + 1) + "/" + b.type.levels.Length +
-                  " (-" + (CostAt(b.type.upgradeCoins, nextIndex - 1)) + " mincí, -" +
-                  (CostAt(b.type.upgradeEnergy, nextIndex - 1)) + " energie)");
-        return true;
+        Debug.Log(b.type.label + ": stavba hotová - úroveň " + (b.level + 1) + "/" + b.type.levels.Length);
     }
+
+    // Počas stavby: "Stavba 0:45" pod ikonkou (zlatou farbou).
+    static void UpdateConstructionLabel(Building b)
+    {
+        var c = b.construction;
+        string text = c.WaitingForServer ? "Čaká na čas…" : "Stavba " + BuildTimers.FormatCountdown(c.Remaining);
+        if (text == b.shownLabel) return;
+        b.shownLabel = text;
+        b.levelText.text = text;
+        b.levelText.color = BuildingColor;
+    }
+
+    static readonly Color BuildingColor = new Color(0.98f, 0.86f, 0.45f, 1f);
 
     void LateUpdate()
     {
         if (cam == null) cam = Camera.main;
-        if (cam == null) return;
+
+        // Stavby musia dobiehať aj keď kamera chýba (ikonky sa vtedy len neukážu).
+        if (cam == null)
+        {
+            foreach (var b in buildings)
+                if (b.instance != null && b.construction != null && b.construction.IsDone) CompleteUpgrade(b);
+            return;
+        }
 
         foreach (var b in buildings)
         {
             if (b.instance == null) continue;
+
+            // FR-29: stavba na čas
+            if (b.construction != null)
+            {
+                if (b.construction.IsDone) CompleteUpgrade(b);
+                else UpdateConstructionLabel(b);
+            }
 
             var screen = cam.WorldToScreenPoint(b.anchor);
             bool visible = screen.z > 0f;
@@ -411,7 +509,7 @@ public class BuildingUpgradeManager : MonoBehaviour
                 b.shake = Mathf.Max(0f, b.shake - Time.unscaledDeltaTime * 2.5f);
                 dx = Mathf.Sin(b.shake * 40f) * 10f * b.shake;
             }
-            b.root.position = new Vector3(screen.x + dx, screen.y, 0f);
+            b.root.position = new Vector3(screen.x + dx, screen.y + iconOffsetY * canvas.scaleFactor, 0f);
 
             float scale = 1f;
             if (b.punch > 0f)

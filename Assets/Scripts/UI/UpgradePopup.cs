@@ -6,6 +6,9 @@ using UnityEngine.UI;
 // FR-22: Okno ponuky vylepšenia budovy.
 // Otvorí sa po kliknutí na ikonku H / R / B nad budovou (BuildingUpgradeManager).
 // Ukáže úroveň pred a po vylepšení, cenu v minciach a energii a tlačidlá VYLEPŠIŤ / ZAVRIEŤ.
+// FR-29: ukáže aj čas stavby a druhé tlačidlo "ZA [drahokam] N" (zaplatiť drahokamami namiesto mincí).
+//        Pri platbe drahokamami sa energia neplatí.
+//        Počas stavby okno ukazuje odpočet, priebeh a tlačidlo "DOKONČIŤ [drahokam] N" (okamžite hotové).
 // Dizajn je rovnaký ako panel Mince / Energia hore (ResourceHud): tmavé drevo so zlatým okrajom.
 // Celé UI sa vytvára v kóde, v scéne netreba nič nastavovať.
 public class UpgradePopup : MonoBehaviour
@@ -22,7 +25,11 @@ public class UpgradePopup : MonoBehaviour
         public int energyCost;          // cena vylepšenia v energii
         public bool isNew;              // budova ešte nie je postavená (napr. bazén) -> okno "Postaviť"
         public string blockedReason;    // ak nie je prázdne, vylepšiť sa nedá (napr. "Najprv vylepši Hotel na Level 3")
-        public bool IsMax => !isNew && level >= maxLevel;
+        public int gemCost;             // FR-29: cena v drahokamoch namiesto mincí a energie (0 = len mince)
+        public int buildSeconds;        // FR-29: ako dlho bude stavba trvať
+        public Construction construction; // FR-29: prebiehajúca stavba (null = budova sa nestavia)
+        public bool IsBuilding => construction != null;
+        public bool IsMax => !isNew && level >= maxLevel && construction == null;
     }
 
     // ---------- farby (rovnaké ako ResourceHud) ----------
@@ -37,12 +44,23 @@ public class UpgradePopup : MonoBehaviour
     static readonly Color ShortColor = new Color(1f, 0.42f, 0.38f, 1f);
 
     // ---------- rozmery (referenčné rozlíšenie 1920 x 1080) ----------
-    const float PanelWidth = 840f;
-    const float PanelHeight = 620f;
-    const float PanelHeightMax = 470f;
+    // Kompaktné rozloženie (FR-29): menší panel, menšie písmo a tlačidlá.
+    const float PanelWidth = 720f;
+    const float PanelHeight = 500f;
+    const float PanelHeightMax = 380f;
+    const float ButtonY = -435f;
+    const float PanelHeightBuilding = 440f;   // odpočet stavby
+    const float ButtonYBuilding = -375f;
+    const float NoteY = -365f;
+    const float NoteYBuilding = -312f;
+    const float ButtonHeight = 66f;
+    const float WideButton = 270f;     // 2 tlačidlá vedľa seba
+    const float NarrowButton = 212f;   // 3 tlačidlá vedľa seba
 
     Info info;
     Action onUpgrade;
+    Action onUpgradeGems;
+    Action onSpeedUp;
     bool built;
     float openAnim;
 
@@ -66,6 +84,23 @@ public class UpgradePopup : MonoBehaviour
     Text upgradeText;
     Button closeButton;
     RectTransform closeRect;
+    CostRow timeRow;
+    GemButton gemButton;
+    GameObject buildGroup;
+    Text countdown;
+    RectTransform progressFill;
+    int shownSpeedUpCost = -1;
+
+    // Fialové tlačidlo s drahokamom: [prefix] [ikonka] [číslo]
+    class GemButton
+    {
+        public Button button;
+        public Image image;
+        public Shadow shadow;
+        public RectTransform rect;
+        public Text prefix;
+        public Text value;
+    }
 
     class CostRow
     {
@@ -74,6 +109,9 @@ public class UpgradePopup : MonoBehaviour
     }
 
     public bool IsOpen => root != null && root.activeSelf;
+
+    // FR-29: ukazuje okno práve túto stavbu? (po dokončení ho budova zavrie)
+    public bool IsShowing(Construction construction) => IsOpen && construction != null && info.construction == construction;
 
     // Vytvorí okno ako samostatný Canvas (nad HUD aj ikonkami budov).
     public static UpgradePopup Create(Transform parent)
@@ -87,45 +125,96 @@ public class UpgradePopup : MonoBehaviour
 
     public void Show(Info data, Action upgradeAction)
     {
+        Show(data, upgradeAction, null, null);
+    }
+
+    // FR-29: upgradeWithGems = zaplatiť drahokamami namiesto mincí, speedUp = okamžite dokončiť stavbu.
+    public void Show(Info data, Action upgradeAction, Action upgradeWithGems, Action speedUp)
+    {
         Build();
         info = data;
         onUpgrade = upgradeAction;
+        onUpgradeGems = upgradeWithGems;
+        onSpeedUp = speedUp;
+        shownSpeedUpCost = -1;
 
         badge.sprite = data.icon;
         badge.enabled = data.icon != null;
 
         bool isMax = data.IsMax;
-        title.text = isMax ? data.nameNominative : (data.isNew ? "Postaviť " : "Vylepšiť ") + data.nameAccusative;
-        subtitle.text = data.isNew
-            ? "Nová budova – najviac Level " + data.maxLevel
-            : "Úroveň " + data.level + " z " + data.maxLevel;
+        bool isBuilding = data.IsBuilding;
+        bool offer = !isMax && !isBuilding;
+        title.text = isMax || isBuilding ? data.nameNominative : (data.isNew ? "Postaviť " : "Vylepšiť ") + data.nameAccusative;
+        if (isBuilding)
+            subtitle.text = data.isNew ? "Stavba – Level 1" : "Vylepšenie na Level " + data.construction.targetLevel;
+        else
+            subtitle.text = data.isNew
+                ? "Nová budova – najviac Level " + data.maxLevel
+                : "Úroveň " + data.level + " z " + data.maxLevel;
 
-        levelsGroup.SetActive(!isMax);
-        costLabel.gameObject.SetActive(!isMax);
-        coinRow.root.SetActive(!isMax);
-        energyRow.root.SetActive(!isMax);
-        upgradeButton.gameObject.SetActive(!isMax);
+        levelsGroup.SetActive(offer);
+        costLabel.gameObject.SetActive(offer);
+        coinRow.root.SetActive(offer);
+        energyRow.root.SetActive(offer);
+        timeRow.root.SetActive(offer);
+        upgradeButton.gameObject.SetActive(offer);
         maxGroup.SetActive(isMax);
+        buildGroup.SetActive(isBuilding);
+
+        bool gemsOffered = offer && onUpgradeGems != null && data.gemCost > 0;
+        gemButton.button.gameObject.SetActive(gemsOffered || (isBuilding && onSpeedUp != null));
 
         if (isMax)
         {
             maxMessage.text = data.nameNominative + " je na najvyššej úrovni.";
             note.gameObject.SetActive(false);
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeightMax);
-            closeRect.anchoredPosition = new Vector2(0f, -385f);
+            closeRect.anchoredPosition = new Vector2(0f, -310f);
+            closeRect.sizeDelta = new Vector2(WideButton, ButtonHeight);
+        }
+        else if (isBuilding)
+        {
+            // Odpočet stavby: [DOKONČIŤ drahokam N] [ZAVRIEŤ]
+            panel.sizeDelta = new Vector2(PanelWidth, PanelHeightBuilding);
+            SetNoteY(NoteYBuilding);
+            gemButton.prefix.text = "DOKONČIŤ";
+            gemButton.rect.anchoredPosition = new Vector2(-145f, ButtonYBuilding);
+            gemButton.rect.sizeDelta = new Vector2(WideButton, ButtonHeight);
+            closeRect.anchoredPosition = new Vector2(onSpeedUp != null ? 145f : 0f, ButtonYBuilding);
+            closeRect.sizeDelta = new Vector2(WideButton, ButtonHeight);
+            UpdateBuilding();
         }
         else
         {
             currentLevel.text = data.isNew ? "Nepostavený" : "Level " + data.level;
-            currentLevel.fontSize = data.isNew ? 26 : 34;
+            currentLevel.fontSize = data.isNew ? 22 : 28;
             nextLevel.text = "Level " + (data.level + 1);
             nextCaption.text = data.isNew ? "PO POSTAVENÍ" : "PO VYLEPŠENÍ";
-            costLabel.text = data.isNew ? "CENA STAVBY" : "CENA VYLEPŠENIA";
+            costLabel.text = data.isNew ? "CENA A ČAS STAVBY" : "CENA A ČAS VYLEPŠENIA";
             upgradeText.text = data.isNew ? "POSTAVIŤ" : "VYLEPŠIŤ";
             coinRow.value.text = Format(data.coinCost);
             energyRow.value.text = Format(data.energyCost);
+            timeRow.value.text = data.buildSeconds > 0 ? BuildTimers.FormatDuration(data.buildSeconds) : "hneď";
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
-            closeRect.anchoredPosition = new Vector2(165f, -550f);
+            SetNoteY(NoteY);
+
+            if (gemsOffered)
+            {
+                // [POSTAVIŤ / VYLEPŠIŤ] [ZA drahokam N] [ZAVRIEŤ]
+                gemButton.prefix.text = "ZA";
+                gemButton.value.text = Format(data.gemCost);
+                SetButton(upgradeButton, new Vector2(-224f, ButtonY), NarrowButton);
+                gemButton.rect.anchoredPosition = new Vector2(0f, ButtonY);
+                gemButton.rect.sizeDelta = new Vector2(NarrowButton, ButtonHeight);
+                closeRect.anchoredPosition = new Vector2(224f, ButtonY);
+                closeRect.sizeDelta = new Vector2(NarrowButton, ButtonHeight);
+            }
+            else
+            {
+                SetButton(upgradeButton, new Vector2(-145f, ButtonY), WideButton);
+                closeRect.anchoredPosition = new Vector2(145f, ButtonY);
+                closeRect.sizeDelta = new Vector2(WideButton, ButtonHeight);
+            }
         }
 
         root.SetActive(true);
@@ -145,6 +234,8 @@ public class UpgradePopup : MonoBehaviour
         if (ResortResources.Instance != null)
             ResortResources.Instance.Changed -= Refresh;
         onUpgrade = null;
+        onUpgradeGems = null;
+        onSpeedUp = null;
         if (root != null) root.SetActive(false);
     }
 
@@ -152,12 +243,20 @@ public class UpgradePopup : MonoBehaviour
     public void Refresh()
     {
         if (!IsOpen || info.IsMax) return;
+        if (info.IsBuilding)
+        {
+            UpdateBuilding();
+            return;
+        }
 
         var res = ResortResources.Instance;
         int coins = res != null ? res.Coins : 0;
+        int gems = res != null ? res.Gems : 0;
         int energy = res != null ? res.Energy : 0;
         bool coinsOk = res != null && coins >= info.coinCost;
         bool energyOk = res != null && energy >= info.energyCost;
+        bool gemsOffered = onUpgradeGems != null && info.gemCost > 0;
+        bool gemsOk = gemsOffered && res != null && gems >= info.gemCost;
 
         coinRow.value.color = coinsOk ? ValueColor : ShortColor;
         energyRow.value.color = energyOk ? ValueColor : ShortColor;
@@ -168,11 +267,23 @@ public class UpgradePopup : MonoBehaviour
         upgradeImage.sprite = canUpgrade ? Sprites.Green : Sprites.Gray;
         upgradeText.color = canUpgrade ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f);
 
+        // Pri platbe drahokamami sa energia neplatí - stačí mať dosť drahokamov.
+        if (gemsOffered) SetGemButtonState(gemsOk && !blocked, gemsOk);
+
         string message = "";
+        bool hint = false;
+        string missing = !coinsOk && !energyOk ? "mincí aj energie" : !coinsOk ? "mincí" : !energyOk ? "energie" : null;
         if (blocked)
             message = info.blockedReason;
         else if (res == null)
             message = "Zdroje rezortu nie sú dostupné";
+        else if (missing != null && gemsOk)
+        {
+            message = "Nedostatok " + missing + " – môžeš zaplatiť drahokamami";
+            hint = true;
+        }
+        else if (missing != null && gemsOffered)
+            message = "Nedostatok " + missing + " aj drahokamov";
         else if (!coinsOk && !energyOk)
             message = "Nedostatok mincí aj energie";
         else if (!coinsOk)
@@ -181,13 +292,84 @@ public class UpgradePopup : MonoBehaviour
             message = "Nedostatok energie – chýba ti " + Format(info.energyCost - energy);
 
         note.text = message;
-        note.color = blocked ? TitleColor : ShortColor;   // podmienka = zlatá, nedostatok zdrojov = červená
+        note.color = blocked || hint ? TitleColor : ShortColor;   // podmienka / rada = zlatá, nedostatok = červená
         note.gameObject.SetActive(message.Length > 0);
+    }
+
+    // FR-29: odpočet, priebeh a cena urýchlenia (volá sa každý snímok, kým sa stavia).
+    void UpdateBuilding()
+    {
+        var c = info.construction;
+        if (c == null) return;
+
+        bool waiting = c.WaitingForServer;
+        countdown.text = waiting ? "--:--" : BuildTimers.FormatCountdown(c.Remaining);
+        progressFill.anchorMax = new Vector2(Mathf.Max(0.02f, c.Progress), 1f);
+
+        // Bez internetu odpočet stojí - len vtedy sa ukáže vysvetlenie (v riadku pod priebehom).
+        const string WaitingText = "Čakám na pripojenie k internetu…";
+
+        if (onSpeedUp == null)
+        {
+            SetNote(waiting ? WaitingText : "", TitleColor);
+            return;
+        }
+
+        int cost = c.SpeedUpCost;
+        var res = ResortResources.Instance;
+        int gems = res != null ? res.Gems : 0;
+        bool gemsOk = res != null && gems >= cost;
+        bool done = c.IsDone;
+
+        if (cost != shownSpeedUpCost)
+        {
+            shownSpeedUpCost = cost;
+            gemButton.value.text = Format(Mathf.Max(1, cost));
+        }
+        SetGemButtonState(gemsOk && !done, gemsOk);
+
+        if (!gemsOk) SetNote("Nedostatok drahokamov – chýba ti " + Format(cost - gems), ShortColor);
+        else SetNote(waiting ? WaitingText : "", TitleColor);
+    }
+
+    void SetNote(string message, Color color)
+    {
+        if (note.text != message) note.text = message;
+        note.color = color;
+        note.gameObject.SetActive(message.Length > 0);
+    }
+
+    void SetNoteY(float y)
+    {
+        var rect = note.rectTransform;
+        rect.anchoredPosition = new Vector2(rect.anchoredPosition.x, y);
+    }
+
+    void SetGemButtonState(bool interactable, bool enough)
+    {
+        gemButton.button.interactable = interactable;
+        gemButton.image.sprite = interactable ? Sprites.Purple : Sprites.Gray;
+        gemButton.shadow.effectColor = interactable ? new Color(0.2f, 0.07f, 0.4f, 1f) : new Color(0.18f, 0.18f, 0.18f, 1f);
+        gemButton.prefix.color = interactable ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f);
+        gemButton.value.color = enough ? (interactable ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f)) : ShortColor;
+    }
+
+    static void SetButton(Button button, Vector2 position, float width)
+    {
+        var rect = (RectTransform)button.transform;
+        rect.anchoredPosition = position;
+        rect.sizeDelta = new Vector2(width, ButtonHeight);
     }
 
     void OnUpgradeClicked()
     {
         onUpgrade?.Invoke();
+    }
+
+    void OnGemClicked()
+    {
+        if (info.IsBuilding) onSpeedUp?.Invoke();
+        else onUpgradeGems?.Invoke();
     }
 
     void OnDestroy()
@@ -208,6 +390,8 @@ public class UpgradePopup : MonoBehaviour
             float s = 0.85f + 0.15f * back;
             panel.localScale = Vector3.one * s;
         }
+
+        if (info.IsBuilding) UpdateBuilding();
 
         if (EscapePressed()) Close();
     }
@@ -264,7 +448,7 @@ public class UpgradePopup : MonoBehaviour
 
         // Ikonka budovy prekrývajúca horný okraj
         var badgeGo = CreateUi("Badge", panel);
-        Place(badgeGo, new Vector2(0f, 0f), new Vector2(146f, 146f));
+        Place(badgeGo, new Vector2(0f, 0f), new Vector2(118f, 118f));
         badge = badgeGo.AddComponent<Image>();
         badge.preserveAspect = true;
         badge.raycastTarget = false;
@@ -272,65 +456,157 @@ public class UpgradePopup : MonoBehaviour
         badgeShadow.effectColor = new Color(0f, 0f, 0f, 0.45f);
         badgeShadow.effectDistance = new Vector2(0f, -6f);
 
-        title = CreateText("Title", panel, new Vector2(0f, -118f), new Vector2(760f, 60f), 44, TitleColor, TextAnchor.MiddleCenter);
-        subtitle = CreateText("Subtitle", panel, new Vector2(0f, -164f), new Vector2(600f, 30f), 21, SubColor, TextAnchor.MiddleCenter);
+        title = CreateText("Title", panel, new Vector2(0f, -88f), new Vector2(660f, 50f), 38, TitleColor, TextAnchor.MiddleCenter);
+        subtitle = CreateText("Subtitle", panel, new Vector2(0f, -124f), new Vector2(600f, 26f), 19, SubColor, TextAnchor.MiddleCenter);
 
         // Úroveň teraz -> po vylepšení
         levelsGroup = CreateUi("Levels", panel);
-        Place(levelsGroup, new Vector2(0f, -250f), new Vector2(700f, 100f));
-        currentLevel = CreateLevelBox(levelsGroup.transform, "Current", -215f, "TERAZ", Sprites.LevelBox, out _);
-        nextLevel = CreateLevelBox(levelsGroup.transform, "Next", 215f, "PO VYLEPŠENÍ", Sprites.LevelBoxNext, out nextCaption);
+        Place(levelsGroup, new Vector2(0f, -190f), new Vector2(600f, 80f));
+        currentLevel = CreateLevelBox(levelsGroup.transform, "Current", -165f, "TERAZ", Sprites.LevelBox, out _);
+        nextLevel = CreateLevelBox(levelsGroup.transform, "Next", 165f, "PO VYLEPŠENÍ", Sprites.LevelBoxNext, out nextCaption);
         var arrowGo = CreateUi("Arrow", levelsGroup.transform);
-        Place(arrowGo, new Vector2(0f, -50f), new Vector2(64f, 48f));
+        Place(arrowGo, new Vector2(0f, -40f), new Vector2(52f, 40f));
         var arrow = arrowGo.AddComponent<Image>();
         arrow.sprite = Sprites.Arrow;
         arrow.raycastTarget = false;
         AddOutline(arrowGo, 1.5f);
 
         // Cena
-        costLabel = CreateText("CostLabel", panel, new Vector2(0f, -340f), new Vector2(600f, 30f), 21, TitleColor, TextAnchor.MiddleCenter);
+        costLabel = CreateText("CostLabel", panel, new Vector2(0f, -262f), new Vector2(600f, 26f), 18, TitleColor, TextAnchor.MiddleCenter);
         costLabel.text = "CENA VYLEPŠENIA";
-        coinRow = CreateCostRow(panel, "CoinCost", "UI/Icons/coin", new Vector2(-90f, -405f));
-        energyRow = CreateCostRow(panel, "EnergyCost", "UI/Icons/energy", new Vector2(110f, -405f));
+        // [minca] 80   [energia] 10   [hodiny] 8 min
+        coinRow = CreateCostRow(panel, "CoinCost", "UI/Icons/coin", new Vector2(-200f, -312f));
+        energyRow = CreateCostRow(panel, "EnergyCost", "UI/Icons/energy", new Vector2(-20f, -312f));
+        timeRow = CreateCostRow(panel, "BuildTime", "UI/Icons/clock", new Vector2(160f, -312f));
 
-        note = CreateText("Note", panel, new Vector2(0f, -468f), new Vector2(760f, 30f), 21, ShortColor, TextAnchor.MiddleCenter);
+        // FR-29: prebiehajúca stavba - odpočet a priebeh
+        buildGroup = CreateUi("Building", panel);
+        Place(buildGroup, new Vector2(0f, -250f), new Vector2(640f, 180f));
+        var clockGo = CreateUi("Clock", buildGroup.transform);
+        Place(clockGo, new Vector2(-125f, -45f), new Vector2(70f, 70f));
+        var clock = clockGo.AddComponent<Image>();
+        clock.sprite = Resources.Load<Sprite>("UI/Icons/clock");
+        clock.preserveAspect = true;
+        clock.raycastTarget = false;
+        countdown = CreateText("Countdown", buildGroup.transform, new Vector2(35f, -45f), new Vector2(260f, 66f), 56, ValueColor, TextAnchor.MiddleCenter);
+
+        var track = CreateUi("ProgressTrack", buildGroup.transform);
+        Place(track, new Vector2(0f, -108f), new Vector2(520f, 28f));
+        var trackImage = track.AddComponent<Image>();
+        trackImage.sprite = Sprites.LevelBox;
+        trackImage.type = Image.Type.Sliced;
+        trackImage.raycastTarget = false;
+        var fillGo = CreateUi("Fill", track.transform);
+        progressFill = (RectTransform)fillGo.transform;
+        progressFill.anchorMin = Vector2.zero;
+        progressFill.anchorMax = new Vector2(0.5f, 1f);
+        progressFill.pivot = new Vector2(0f, 0.5f);
+        progressFill.offsetMin = new Vector2(4f, 4f);
+        progressFill.offsetMax = new Vector2(-4f, -4f);
+        var fill = fillGo.AddComponent<Image>();
+        fill.sprite = Sprites.Green;
+        fill.type = Image.Type.Sliced;
+        fill.raycastTarget = false;
+
+        buildGroup.SetActive(false);
+
+        note = CreateText("Note", panel, new Vector2(0f, NoteY), new Vector2(660f, 26f), 19, ShortColor, TextAnchor.MiddleCenter);
         note.gameObject.SetActive(false);
 
         // MAX úroveň
         maxGroup = CreateUi("Max", panel);
-        Place(maxGroup, new Vector2(0f, -250f), new Vector2(760f, 140f));
-        var maxTitle = CreateText("MaxTitle", maxGroup.transform, new Vector2(0f, -50f), new Vector2(600f, 50f), 36, TitleColor, TextAnchor.MiddleCenter);
+        Place(maxGroup, new Vector2(0f, -190f), new Vector2(660f, 120f));
+        var maxTitle = CreateText("MaxTitle", maxGroup.transform, new Vector2(0f, -40f), new Vector2(600f, 44f), 32, TitleColor, TextAnchor.MiddleCenter);
         maxTitle.text = "MAX Level";
-        maxMessage = CreateText("MaxMessage", maxGroup.transform, new Vector2(0f, -100f), new Vector2(740f, 30f), 21, ValueColor, TextAnchor.MiddleCenter);
+        maxMessage = CreateText("MaxMessage", maxGroup.transform, new Vector2(0f, -82f), new Vector2(640f, 26f), 19, ValueColor, TextAnchor.MiddleCenter);
         maxGroup.SetActive(false);
 
         // Tlačidlá
-        upgradeButton = CreateButton(panel, "UpgradeButton", "VYLEPŠIŤ", Sprites.Green, new Vector2(-165f, -550f),
+        upgradeButton = CreateButton(panel, "UpgradeButton", "VYLEPŠIŤ", Sprites.Green, new Vector2(-145f, ButtonY),
             new Color(0.03f, 0.36f, 0.08f, 1f), out upgradeImage, out upgradeText);
         upgradeText.color = Color.white;
         upgradeButton.onClick.AddListener(OnUpgradeClicked);
 
-        closeButton = CreateButton(panel, "CloseButton", "ZAVRIEŤ", Sprites.WoodButton, new Vector2(165f, -550f),
+        closeButton = CreateButton(panel, "CloseButton", "ZAVRIEŤ", Sprites.WoodButton, new Vector2(145f, ButtonY),
             new Color(0.1f, 0.06f, 0.03f, 1f), out _, out _);
         closeRect = (RectTransform)closeButton.transform;
         closeButton.onClick.AddListener(Close);
 
+        gemButton = CreateGemButton(panel);
+        gemButton.button.onClick.AddListener(OnGemClicked);
+        gemButton.button.gameObject.SetActive(false);
+
         root.SetActive(false);
+    }
+
+    // FR-29: fialové tlačidlo [text] [drahokam] [číslo] - obsah je vycentrovaný cez HorizontalLayoutGroup.
+    GemButton CreateGemButton(Transform parent)
+    {
+        var gb = new GemButton();
+        var go = CreateUi("GemButton", parent);
+        Place(go, new Vector2(0f, ButtonY), new Vector2(NarrowButton, ButtonHeight));
+        gb.rect = (RectTransform)go.transform;
+        gb.image = go.AddComponent<Image>();
+        gb.image.sprite = Sprites.Purple;
+        gb.image.type = Image.Type.Sliced;
+        gb.shadow = go.AddComponent<Shadow>();
+        gb.shadow.effectColor = new Color(0.2f, 0.07f, 0.4f, 1f);
+        gb.shadow.effectDistance = new Vector2(0f, -6f);
+
+        gb.button = go.AddComponent<Button>();
+        gb.button.targetGraphic = gb.image;
+        var colors = gb.button.colors;
+        colors.highlightedColor = new Color(1f, 0.97f, 0.88f, 1f);
+        colors.pressedColor = new Color(0.8f, 0.78f, 0.72f, 1f);
+        colors.disabledColor = Color.white;
+        gb.button.colors = colors;
+
+        var content = CreateUi("Content", go.transform);
+        Stretch((RectTransform)content.transform);
+        var layout = content.AddComponent<HorizontalLayoutGroup>();
+        layout.childAlignment = TextAnchor.MiddleCenter;
+        layout.spacing = 8f;
+        layout.childControlWidth = true;
+        layout.childControlHeight = true;
+        layout.childForceExpandWidth = false;
+        layout.childForceExpandHeight = false;
+
+        gb.prefix = CreateLayoutText(content.transform, "Prefix", 26);
+        var icon = CreateUi("Gem", content.transform);
+        var iconLayout = icon.AddComponent<LayoutElement>();
+        iconLayout.preferredWidth = 40f;
+        iconLayout.preferredHeight = 40f;
+        var iconImage = icon.AddComponent<Image>();
+        iconImage.sprite = Resources.Load<Sprite>("UI/Icons/gem");
+        iconImage.preserveAspect = true;
+        iconImage.raycastTarget = false;
+        gb.value = CreateLayoutText(content.transform, "Value", 28);
+        return gb;
+    }
+
+    static Text CreateLayoutText(Transform parent, string name, int fontSize)
+    {
+        var go = CreateUi(name, parent);
+        var text = go.AddComponent<Text>();
+        SetupText(text, fontSize, Color.white, TextAnchor.MiddleCenter);
+        text.fontStyle = FontStyle.Bold;
+        AddOutline(go, 2f);
+        return text;
     }
 
     Text CreateLevelBox(Transform parent, string name, float x, string caption, Sprite sprite, out Text captionText)
     {
         var box = CreateUi(name, parent);
-        Place(box, new Vector2(x, -50f), new Vector2(210f, 88f));
+        Place(box, new Vector2(x, -40f), new Vector2(180f, 74f));
         var image = box.AddComponent<Image>();
         image.sprite = sprite;
         image.type = Image.Type.Sliced;
         image.raycastTarget = false;
 
-        var cap = CreateText("Caption", box.transform, new Vector2(0f, -22f), new Vector2(200f, 22f), 16, TitleColor, TextAnchor.MiddleCenter);
+        var cap = CreateText("Caption", box.transform, new Vector2(0f, -18f), new Vector2(170f, 20f), 14, TitleColor, TextAnchor.MiddleCenter);
         cap.text = caption;
         captionText = cap;
-        return CreateText("Value", box.transform, new Vector2(0f, -56f), new Vector2(200f, 40f), 34, ValueColor, TextAnchor.MiddleCenter);
+        return CreateText("Value", box.transform, new Vector2(0f, -48f), new Vector2(170f, 34f), 28, ValueColor, TextAnchor.MiddleCenter);
     }
 
     // Cena: ikonka (minca / energia) a len samotná cena; mince a energia sú vedľa seba.
@@ -338,14 +614,14 @@ public class UpgradePopup : MonoBehaviour
     {
         var row = new CostRow();
         row.root = CreateUi(name, parent);
-        Place(row.root, position, new Vector2(240f, 66f));
+        Place(row.root, position, new Vector2(200f, 54f));
 
         var icon = CreateUi("Icon", row.root.transform);
         var iconRect = (RectTransform)icon.transform;
         iconRect.anchorMin = iconRect.anchorMax = new Vector2(0.5f, 0.5f);
         iconRect.pivot = new Vector2(0.5f, 0.5f);
-        iconRect.anchoredPosition = new Vector2(-42f, 0f);
-        iconRect.sizeDelta = new Vector2(66f, 66f);
+        iconRect.anchoredPosition = new Vector2(-34f, 0f);
+        iconRect.sizeDelta = new Vector2(54f, 54f);
         var iconImage = icon.AddComponent<Image>();
         iconImage.sprite = Resources.Load<Sprite>(iconResource);
         iconImage.preserveAspect = true;
@@ -356,9 +632,9 @@ public class UpgradePopup : MonoBehaviour
         valueRect.anchorMin = valueRect.anchorMax = new Vector2(0.5f, 0.5f);
         valueRect.pivot = new Vector2(0f, 0.5f);
         valueRect.anchoredPosition = new Vector2(0f, 0f);
-        valueRect.sizeDelta = new Vector2(160f, 50f);
+        valueRect.sizeDelta = new Vector2(130f, 44f);
         row.value = value.AddComponent<Text>();
-        SetupText(row.value, 38, ValueColor, TextAnchor.MiddleLeft);
+        SetupText(row.value, 32, ValueColor, TextAnchor.MiddleLeft);
         row.value.fontStyle = FontStyle.Bold;
         AddOutline(value, 2f);
 
@@ -369,7 +645,7 @@ public class UpgradePopup : MonoBehaviour
                         out Image image, out Text text)
     {
         var go = CreateUi(name, parent);
-        Place(go, position, new Vector2(300f, 76f));
+        Place(go, position, new Vector2(WideButton, ButtonHeight));
         image = go.AddComponent<Image>();
         image.sprite = sprite;
         image.type = Image.Type.Sliced;
@@ -385,7 +661,7 @@ public class UpgradePopup : MonoBehaviour
         colors.disabledColor = Color.white;   // vzhľad zakázaného tlačidla rieši šedý sprite
         button.colors = colors;
 
-        text = CreateText("Label", go.transform, Vector2.zero, Vector2.zero, 28, ValueColor, TextAnchor.MiddleCenter);
+        text = CreateText("Label", go.transform, Vector2.zero, Vector2.zero, 26, ValueColor, TextAnchor.MiddleCenter);
         Stretch(text.rectTransform);
         text.text = label;
         return button;
@@ -468,7 +744,7 @@ public class UpgradePopup : MonoBehaviour
     // internal: rovnaké sprity používa aj okno VIP hostí (VipInvitePopup, FR-31).
     internal static class Sprites
     {
-        static Sprite panel, bar, barShort, levelBox, levelBoxNext, green, gray, woodButton, arrow;
+        static Sprite panel, bar, barShort, levelBox, levelBoxNext, green, gray, woodButton, arrow, purple;
 
         public static Sprite Panel => Get(ref panel, () => RoundRect(200, 200, 46f, 7f, Wood, WoodTop, Gold, GoldLight));
         public static Sprite Bar => Get(ref bar, () => RoundRect(280, 64, 30f, 4.5f, Wood, WoodTop, Gold, GoldLight));
@@ -486,6 +762,10 @@ public class UpgradePopup : MonoBehaviour
             new Color(0.36f, 0.36f, 0.36f, 1f), new Color(0.55f, 0.55f, 0.55f, 1f),
             new Color(0.26f, 0.26f, 0.26f, 1f), new Color(0.26f, 0.26f, 0.26f, 1f)));
         public static Sprite WoodButton => Get(ref woodButton, () => RoundRect(120, 80, 20f, 4f, Wood, WoodTop, Gold, GoldLight));
+        // FR-29: tlačidlo platby drahokamami (fialové ako tlačidlo VIP)
+        public static Sprite Purple => Get(ref purple, () => RoundRect(120, 80, 20f, 4f,
+            new Color(0.4f, 0.18f, 0.75f, 1f), new Color(0.6f, 0.36f, 0.95f, 1f),
+            new Color(0.25f, 0.09f, 0.5f, 1f), new Color(0.25f, 0.09f, 0.5f, 1f)));
         public static Sprite Arrow => Get(ref arrow, () => ArrowSprite());
 
         // Pozor: projekt má vypnutý Domain Reload (Enter Play Mode Options), statické polia prežijú

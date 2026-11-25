@@ -8,6 +8,8 @@ using UnityEngine.UI;
 //  - Potom je nad miestom ikonka "+". Klik otvorí okno "Postaviť ..." s cenou.
 //  - Po postavení je budova na Level 1 a ikonka ukazuje písmeno budovy s úrovňou; klik otvorí okno
 //    vylepšenia až po maxLevel. Žiadna budova nesmie mať vyššiu úroveň ako hotel.
+// FR-29: stavba aj vylepšenie trvá nejaký čas (BuildTimers) a dá sa zaplatiť aj drahokamami.
+//        Počas stavby je pod ikonkou odpočet; klik otvorí okno s okamžitým dokončením za drahokamy.
 // Pozícia a otočenie budovy = pozícia a otočenie objektu s týmto komponentom (dá sa posunúť v Scene view).
 // Konkrétne budovy: PoolBuildSpot (bazén), WellnessBuildSpot (wellness).
 public abstract class BuildSpot : MonoBehaviour
@@ -47,6 +49,8 @@ public abstract class BuildSpot : MonoBehaviour
     [SerializeField] float plusHeight = 1.2f;
     [Tooltip("O koľko metrov nad budovou je ikonka po postavení")]
     [SerializeField] float heightAboveModel = 0.8f;
+    [Tooltip("Posun ikonky na obrazovke (px pri 1920x1080), záporné = nižšie")]
+    [SerializeField] float iconOffsetY = -22f;
 
     static readonly Color TextColor = new Color(1f, 0.97f, 0.88f, 1f);
 
@@ -84,6 +88,14 @@ public abstract class BuildSpot : MonoBehaviour
     Vector3 anchor;
     bool wasUnlocked;
     float punch;
+    Canvas iconCanvas;
+    Construction construction;   // FR-29: prebiehajúca stavba (null = nestavia sa)
+    string shownLabel;
+
+    static readonly Color BuildingColor = new Color(0.98f, 0.86f, 0.45f, 1f);
+
+    // Prebieha práve stavba / vylepšenie?
+    public bool IsUnderConstruction => construction != null;
 
     void Start()
     {
@@ -129,13 +141,29 @@ public abstract class BuildSpot : MonoBehaviour
             energyCost = NextEnergyCost(),
             isNew = !IsBuilt,
             blockedReason = LevelLimitReason(Level + 1),
+            gemCost = BuildTimers.GemPrice(NextCoinCost(), NextEnergyCost()),
+            buildSeconds = BuildTimers.DurationSeconds(Level + 1),
+            construction = construction,
         };
 
-        popup.Show(info, () =>
+        if (construction != null)
         {
-            if (BuildOrUpgrade()) popup.Close();
-            else popup.Refresh();
-        });
+            popup.Show(info, null, null, SpeedUp);
+            return;
+        }
+
+        popup.Show(info, () => OnBuyClicked(false), () => OnBuyClicked(true), null);
+    }
+
+    // Po zaplatení sa okno prepne na odpočet stavby (s možnosťou urýchlenia).
+    void OnBuyClicked(bool withGems)
+    {
+        if (BuildOrUpgrade(withGems))
+        {
+            popup.Close();
+            if (construction != null) OnIconClicked();
+        }
+        else popup.Refresh();
     }
 
     // Budova nesmie mať vyššiu úroveň ako hotel (hlavná budova).
@@ -162,10 +190,11 @@ public abstract class BuildSpot : MonoBehaviour
         return costs != null && index >= 0 && index < costs.Length ? Mathf.Max(0, costs[index]) : 0;
     }
 
-    // Postaví budovu (Level 0 -> 1) alebo ho vylepší (1 -> 2 -> 3). Vráti true pri úspechu.
-    bool BuildOrUpgrade()
+    // Zaplatí stavbu (Level 0 -> 1) alebo vylepšenie (1 -> 2 -> 3) mincami alebo drahokamami
+    // a spustí stavbu na čas (FR-29). Vráti true, ak sa stavba začala.
+    bool BuildOrUpgrade(bool withGems)
     {
-        if (Level >= maxLevel) return false;
+        if (Level >= maxLevel || construction != null) return false;
 
         string limit = LevelLimitReason(Level + 1);
         if (limit != null)
@@ -183,7 +212,45 @@ public abstract class BuildSpot : MonoBehaviour
 
         int coins = NextCoinCost();
         int energy = NextEnergyCost();
-        if (!res.TrySpend(coins, energy)) return false;
+        int gems = BuildTimers.GemPrice(coins, energy);
+        // Pri platbe drahokamami sa energia neplatí (drahokamy sú preto drahšie).
+        if (withGems ? !res.TrySpendGems(gems) : !res.TrySpend(coins, energy)) return false;
+
+        int target = Level + 1;
+        int seconds = BuildTimers.DurationSeconds(target);
+        Debug.Log(nameNominative + (target == 1 ? ": stavba začala" : ": vylepšenie na Level " + target + " začalo") +
+                  " (" + BuildTimers.FormatDuration(seconds) + ", -" + (withGems ? gems + " drahokamov" : coins + " mincí, -" + energy + " energie") + ")");
+
+        construction = new Construction(target, seconds);
+        punch = 1f;
+        shownLabel = null;
+        if (construction.IsDone) CompleteConstruction();
+        return true;
+    }
+
+    // FR-29: okamžité dokončenie za drahokamy
+    void SpeedUp()
+    {
+        if (construction == null) return;
+        int cost = construction.SpeedUpCost;
+        var res = ResortResources.Instance;
+        if (res == null || !res.TrySpendGems(cost))
+        {
+            popup.Refresh();
+            return;
+        }
+
+        Debug.Log(nameNominative + ": stavba urýchlená za " + cost + " drahokamov.");
+        CompleteConstruction();
+    }
+
+    // Stavba hotová: nová úroveň, model a udalosti.
+    void CompleteConstruction()
+    {
+        var c = construction;
+        construction = null;
+        shownLabel = null;
+        if (popup != null && popup.IsShowing(c)) popup.Close();
 
         Level++;
         UpdateModel();
@@ -193,16 +260,14 @@ public abstract class BuildSpot : MonoBehaviour
         if (Level == 1)
         {
             OnBuilt();
-            Debug.Log(nameNominative + ": postavený na Level 1 (-" + coins + " mincí, -" + energy + " energie)");
+            Debug.Log(nameNominative + ": postavený na Level 1");
         }
         else
         {
-            Debug.Log(nameNominative + ": vylepšený na Level " + Level + "/" + maxLevel +
-                      " (-" + coins + " mincí, -" + energy + " energie)");
+            Debug.Log(nameNominative + ": vylepšený na Level " + Level + "/" + maxLevel);
         }
 
         LevelChanged?.Invoke(Level);
-        return true;
     }
 
     // Model pre aktuálnu úroveň; ak pre ňu model ešte nie je, použije sa najbližší nižší.
@@ -255,6 +320,7 @@ public abstract class BuildSpot : MonoBehaviour
         var canvasGo = new GameObject(Label + "BuildIcon");
         canvasGo.transform.SetParent(transform, false);
         var canvas = canvasGo.AddComponent<Canvas>();
+        iconCanvas = canvas;
         canvas.renderMode = RenderMode.ScreenSpaceOverlay;
         canvas.sortingOrder = 50;   // rovnako ako ikonky H / R / B
         var scaler = canvasGo.AddComponent<CanvasScaler>();
@@ -305,16 +371,40 @@ public abstract class BuildSpot : MonoBehaviour
     void UpdateIcon()
     {
         if (iconImage == null) return;
+
+        if (construction != null)
+        {
+            // FR-29: počas stavby ikonka budovy a odpočet pod ňou
+            iconImage.sprite = builtSprite != null ? builtSprite : plusSprite;
+            string text = construction.WaitingForServer
+                ? "Čaká na čas…"
+                : "Stavba " + BuildTimers.FormatCountdown(construction.Remaining);
+            if (text != shownLabel)
+            {
+                shownLabel = text;
+                label.text = text;
+                label.color = BuildingColor;
+            }
+            return;
+        }
+
+        label.color = TextColor;
         iconImage.sprite = IsBuilt ? builtSprite : plusSprite;
-        // Kým budova nie je postavená, je tam len "+" bez textu; potom úroveň ako pri H / R / B.
-        if (!IsBuilt) label.text = "";
-        else label.text = Level >= maxLevel ? "MAX Level" : "Level " + Level;
+        // Pod ikonkou sa úroveň nepíše (ako pri H / R / B); text je len počas stavby (odpočet).
+        label.text = "";
     }
 
     void LateUpdate()
     {
         if (icon == null) return;
         if (cam == null) cam = Camera.main;
+
+        // FR-29: stavba na čas
+        if (construction != null)
+        {
+            if (construction.IsDone) CompleteConstruction();
+            else UpdateIcon();
+        }
 
         bool unlocked = IsUnlocked;
         if (unlocked && !wasUnlocked)
@@ -335,10 +425,11 @@ public abstract class BuildSpot : MonoBehaviour
         if (icon.gameObject.activeSelf != visible) icon.gameObject.SetActive(visible);
         if (!visible) return;
 
-        icon.position = new Vector3(screen.x, screen.y, 0f);
+        float scaleFactor = iconCanvas != null ? iconCanvas.scaleFactor : 1f;
+        icon.position = new Vector3(screen.x, screen.y + iconOffsetY * scaleFactor, 0f);
 
         float scale = 1f;
-        if (!IsBuilt) scale += Mathf.Sin(Time.unscaledTime * 4f) * 0.04f;   // jemné pulzovanie "+"
+        if (!IsBuilt && construction == null) scale += Mathf.Sin(Time.unscaledTime * 4f) * 0.04f;   // jemné pulzovanie "+"
         if (punch > 0f)
         {
             punch = Mathf.Max(0f, punch - Time.unscaledDeltaTime * 3f);
