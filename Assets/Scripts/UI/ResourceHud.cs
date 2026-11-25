@@ -3,13 +3,16 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
-// Stály panel na ostrove: mince, energia a hodnota rezortu.
+// Stály panel na ostrove: mince, drahokamy, energia a hodnota rezortu.
+// FR-29: kompaktný vzhľad podľa Figmy - len ikonka a hodnota (napr. [minca] 100, [energia] 45/50),
+// farby (tmavé drevo so zlatým okrajom) ostávajú. Všetky políčka majú rovnakú šírku (PillWidth).
 public class ResourceHud : MonoBehaviour
 {
     static ResourceHud instance;
     static bool sceneHooked;
 
     Text coinsValue;
+    Text gemsValue;
     Text energyValue;
     Text resortValue;
     bool built;
@@ -100,11 +103,11 @@ public class ResourceHud : MonoBehaviour
         rowRect.anchorMin = new Vector2(0f, 1f);
         rowRect.anchorMax = new Vector2(0f, 1f);
         rowRect.pivot = new Vector2(0f, 1f);
-        rowRect.anchoredPosition = new Vector2(48f, -18f);
-        rowRect.sizeDelta = new Vector2(980f, 86f);
+        rowRect.anchoredPosition = new Vector2(48f, -22f);
+        rowRect.sizeDelta = new Vector2(980f, 64f);
 
         var layout = row.AddComponent<HorizontalLayoutGroup>();
-        layout.spacing = 22f;
+        layout.spacing = 18f;
         layout.childAlignment = TextAnchor.MiddleLeft;
         layout.childControlWidth = true;
         layout.childControlHeight = true;
@@ -112,6 +115,7 @@ public class ResourceHud : MonoBehaviour
         layout.childForceExpandHeight = false;
 
         CreateStat(row.transform, "Mince", IconKind.Coin, out coinsValue);
+        CreateStat(row.transform, "Drahokamy", IconKind.Gem, out gemsValue);
         CreateStat(row.transform, "Energia", IconKind.Energy, out energyValue);
         CreateStat(row.transform, "Hodnota rezortu", IconKind.Resort, out resortValue);
     }
@@ -121,10 +125,23 @@ public class ResourceHud : MonoBehaviour
         var data = ResortResources.Instance;
         if (data == null || coinsValue == null) return;
 
-        coinsValue.text = Format(data.Coins);
-        energyValue.text = Format(data.Energy);
-        resortValue.text = Format(data.ResortValue);
+        SetValue(coinsValue, Format(data.Coins));
+        SetValue(gemsValue, Format(data.Gems));
+        SetValue(energyValue, Format(data.Energy) + "/" + Format(data.MaxEnergy));
+        SetValue(resortValue, Format(data.ResortValue));
     }
+
+    static void SetValue(Text label, string value)
+    {
+        label.text = value;
+    }
+
+    const float PillWidth = 196f;    // rovnaká šírka pre všetky políčka
+    const float PillHeight = 64f;
+    const float BarHeight = 50f;
+    const float IconSize = 66f;
+    const float ValueLeft = 70f;     // kde začína číslo (za ikonkou)
+    const float ValueRight = 16f;    // okraj za číslom
 
     static string Format(int value)
     {
@@ -134,22 +151,23 @@ public class ResourceHud : MonoBehaviour
         return value.ToString("N0", culture);
     }
 
-    enum IconKind { Coin, Energy, Resort }
+    enum IconKind { Coin, Gem, Energy, Resort }
 
+    // Kompaktné políčko: [ikonka] hodnota
     static void CreateStat(Transform parent, string title, IconKind kind, out Text valueLabel)
     {
         var pill = CreateUi(title, parent);
         var layoutItem = pill.AddComponent<LayoutElement>();
-        layoutItem.preferredWidth = 312f;
-        layoutItem.preferredHeight = 82f;
+        layoutItem.preferredWidth = PillWidth;
+        layoutItem.preferredHeight = PillHeight;
 
         var bar = CreateUi("Bar", pill.transform);
         var barRect = bar.GetComponent<RectTransform>();
         barRect.anchorMin = new Vector2(0f, 0.5f);
         barRect.anchorMax = new Vector2(1f, 0.5f);
         barRect.pivot = new Vector2(0.5f, 0.5f);
-        barRect.anchoredPosition = new Vector2(16f, 0f);
-        barRect.sizeDelta = new Vector2(-28f, 54f);
+        barRect.offsetMin = new Vector2(22f, -BarHeight * 0.5f);   // pás začína pod ikonkou
+        barRect.offsetMax = new Vector2(0f, BarHeight * 0.5f);
         var barImage = bar.AddComponent<Image>();
         barImage.sprite = BarSprite();
         barImage.type = Image.Type.Sliced;
@@ -160,31 +178,21 @@ public class ResourceHud : MonoBehaviour
         iconRect.anchorMin = new Vector2(0f, 0.5f);
         iconRect.anchorMax = new Vector2(0f, 0.5f);
         iconRect.pivot = new Vector2(0f, 0.5f);
-        iconRect.anchoredPosition = new Vector2(-6f, 2f);
-        iconRect.sizeDelta = new Vector2(84f, 84f);
+        iconRect.anchoredPosition = new Vector2(-6f, 1f);
+        iconRect.sizeDelta = new Vector2(IconSize, IconSize);
         var iconImage = icon.AddComponent<Image>();
         iconImage.sprite = IconSprite(kind);
+        iconImage.preserveAspect = true;
         iconImage.raycastTarget = false;
-
-        var titleGo = CreateUi("Title", pill.transform);
-        var titleRect = titleGo.GetComponent<RectTransform>();
-        titleRect.anchorMin = new Vector2(0f, 0.5f);
-        titleRect.anchorMax = new Vector2(1f, 1f);
-        titleRect.offsetMin = new Vector2(82f, -2f);
-        titleRect.offsetMax = new Vector2(-16f, -8f);
-        var titleText = titleGo.AddComponent<Text>();
-        SetupText(titleText, 15, new Color(0.98f, 0.86f, 0.45f, 1f));
-        titleText.text = title;
-        CartoonOutline(titleGo);
 
         var valueGo = CreateUi("Value", pill.transform);
         var valueRect = valueGo.GetComponent<RectTransform>();
         valueRect.anchorMin = new Vector2(0f, 0f);
-        valueRect.anchorMax = new Vector2(1f, 0.58f);
-        valueRect.offsetMin = new Vector2(82f, 12f);
-        valueRect.offsetMax = new Vector2(-16f, 8f);
+        valueRect.anchorMax = new Vector2(1f, 1f);
+        valueRect.offsetMin = new Vector2(ValueLeft, 0f);
+        valueRect.offsetMax = new Vector2(-ValueRight, 1f);
         valueLabel = valueGo.AddComponent<Text>();
-        SetupText(valueLabel, 24, new Color(1f, 0.97f, 0.88f, 1f));
+        SetupText(valueLabel, 27, new Color(1f, 0.97f, 0.88f, 1f));
         valueLabel.fontStyle = FontStyle.Bold;
         CartoonOutline(valueGo);
     }
@@ -267,7 +275,8 @@ public class ResourceHud : MonoBehaviour
 
     static Sprite IconSprite(IconKind kind)
     {
-        string name = kind == IconKind.Coin ? "coin" : kind == IconKind.Energy ? "energy" : "value";
+        string name = kind == IconKind.Coin ? "coin" : kind == IconKind.Gem ? "gem" :
+                      kind == IconKind.Energy ? "energy" : "value";
         return Resources.Load<Sprite>("UI/Icons/" + name);
     }
 
