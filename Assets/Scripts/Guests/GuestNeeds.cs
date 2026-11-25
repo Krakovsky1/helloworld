@@ -21,6 +21,18 @@ public class GuestNeeds : MonoBehaviour
         NeedAdded?.Invoke(need);
     }
 
+    // FR-39: obnova potreby z uloženej hry (zachová vek potreby kvôli hodnoteniu rýchlosti obsluhy).
+    public GuestNeed RestoreNeed(GuestNeedType type, bool completed, float createdAt)
+    {
+        GuestNeed need = new GuestNeed(type);
+        need.IsCompleted = completed;
+        need.CreatedAt = createdAt;
+        needs.Add(need);
+
+        NeedAdded?.Invoke(need);
+        return need;
+    }
+
     public bool CompleteNeed(int index)
     {
         if (index < 0 || index >= needs.Count)

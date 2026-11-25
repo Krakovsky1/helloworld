@@ -83,6 +83,10 @@ public partial class GuestWaveManager : MonoBehaviour
     public event Action GuestArrived;
     public event Action WaveFinished;
 
+    // FR-39: začiatok vlny (START WAVE) a úplné dokončenie vlny aj cooldownu - pre uloženie hry.
+    public event Action WaveStarted;
+    public event Action WaveCycleCompleted;
+
     // Vyvolá sa až po príchode všetkých hostí aktuálnej vlny.
     public event Action<IReadOnlyList<GameObject>> WaveReadyForDecision;
 
@@ -192,6 +196,7 @@ public partial class GuestWaveManager : MonoBehaviour
                   " (" + boats[boatIndex].guestCount + " hostí)");
         currentWaveBoat = boats[boatIndex]; // rovnaká loď príde aj po hostí pri odchode
         StartCoroutine(RunWave(boats[boatIndex]));
+        WaveStarted?.Invoke();
     }
 
     // Úroveň rezortu je najnižšia zo súčasných úrovní hotela, reštaurácie a baru.
@@ -946,6 +951,8 @@ public partial class GuestWaveManager : MonoBehaviour
         Debug.Log(
             "Vlna aj cooldown sú dokončené. Je možné spustiť ďalšiu vlnu."
         );
+
+        WaveCycleCompleted?.Invoke();
     }
 
     // ----------------------------------------------------------------

@@ -195,6 +195,53 @@ public class VipInviteManager : MonoBehaviour
     }
 
     // ------------------------------------------------------------------
+    // FR-39: uloženie hry - vylosovaní VIP hostia aj pozvaný VIP ostanú po reštarte rovnakí
+    // ------------------------------------------------------------------
+
+    public void CaptureSave(VipSave save)
+    {
+        save.offerIds.Clear();
+        foreach (var vip in offer)
+            if (vip != null && !string.IsNullOrEmpty(vip.id)) save.offerIds.Add(vip.id);
+
+        save.invitedId = InvitedVip != null ? InvitedVip.id : "";
+        save.invitedForWave = InvitedVip != null ? InvitedForWave : 0;
+    }
+
+    public void RestoreSave(VipSave save)
+    {
+        if (save == null) return;
+        if (catalog == null) catalog = VipCatalog.Load();
+        if (catalog == null) return;
+
+        var restored = new List<VipPersonality>();
+        if (save.offerIds != null)
+        {
+            foreach (var id in save.offerIds)
+            {
+                var vip = catalog.Find(id);
+                if (vip != null && !restored.Contains(vip)) restored.Add(vip);
+            }
+        }
+
+        // Ak sa uložená ponuka nedá obnoviť (napr. zmenený katalóg), ostane nová vylosovaná.
+        if (restored.Count > 0)
+        {
+            offer.Clear();
+            offer.AddRange(restored);
+        }
+
+        InvitedVip = !string.IsNullOrEmpty(save.invitedId) ? catalog.Find(save.invitedId) : null;
+        InvitedForWave = InvitedVip != null ? save.invitedForWave : 0;
+
+        var names = new List<string>();
+        foreach (var vip in offer) names.Add(vip.displayName);
+        Debug.Log("FR-39 | Obnovená ponuka VIP: " + string.Join(", ", names) +
+                  (InvitedVip != null ? " | pozvaný: " + InvitedVip.displayName + " (vlna " + InvitedForWave + ")" : ""));
+        Changed?.Invoke();
+    }
+
+    // ------------------------------------------------------------------
     // Losovanie ponuky podľa vzácnosti
     // ------------------------------------------------------------------
 

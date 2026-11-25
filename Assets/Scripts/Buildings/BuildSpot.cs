@@ -225,6 +225,7 @@ public abstract class BuildSpot : MonoBehaviour
         punch = 1f;
         shownLabel = null;
         if (construction.IsDone) CompleteConstruction();
+        SaveManager.RequestSave();   // FR-39: začiatok stavby
         return true;
     }
 
@@ -268,6 +269,43 @@ public abstract class BuildSpot : MonoBehaviour
         }
 
         LevelChanged?.Invoke(Level);
+        SaveManager.RequestSave();   // FR-39: koniec stavby
+    }
+
+    // ---------------------------------------------------------------- FR-39: uloženie hry
+
+    public BuildingSave CaptureSave()
+    {
+        var save = new BuildingSave { label = Label, level = Level };
+        if (construction != null)
+        {
+            save.constructionTarget = construction.targetLevel;
+            save.constructionDuration = construction.duration;
+            save.constructionEndUnix = construction.EndUnixForSave;
+        }
+        return save;
+    }
+
+    // Obnoví úroveň, model a prebiehajúcu stavbu (dokončí sa sama, ak medzitým uplynul čas).
+    public void RestoreSave(BuildingSave save)
+    {
+        if (save == null) return;
+
+        Level = Mathf.Clamp(save.level, 0, maxLevel);
+        if (Level > 0)
+        {
+            UpdateModel();
+            OnBuilt();   // napr. bazén odomkne službu Relax
+        }
+
+        construction = null;
+        if (save.constructionTarget > Level)
+            construction = new Construction(save.constructionTarget, save.constructionDuration, save.constructionEndUnix);
+
+        shownLabel = null;
+        wasUnlocked = IsUnlocked;   // bez "punch" animácie pri načítaní
+        UpdateIcon();
+        if (Level > 0) LevelChanged?.Invoke(Level);
     }
 
     // Model pre aktuálnu úroveň; ak pre ňu model ešte nie je, použije sa najbližší nižší.

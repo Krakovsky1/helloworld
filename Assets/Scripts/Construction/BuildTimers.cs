@@ -88,6 +88,26 @@ public class Construction
         TryStart();
     }
 
+    // FR-39: obnova z uloženej hry. endUnix < 0 = odpočet ešte nezačal (čakal na čas servera).
+    public Construction(int targetLevel, double duration, double savedEndUnix)
+    {
+        this.targetLevel = targetLevel;
+        this.duration = Math.Max(0.0, duration);
+        if (savedEndUnix >= 0.0) endUnix = savedEndUnix;
+        ServerClock.EnsureExists();
+        TryStart();
+    }
+
+    // Koniec stavby (čas servera, UTC unix s) na uloženie; -1 = odpočet ešte nezačal.
+    public double EndUnixForSave
+    {
+        get
+        {
+            TryStart();
+            return double.IsNaN(endUnix) ? -1.0 : endUnix;
+        }
+    }
+
     void TryStart()
     {
         if (double.IsNaN(endUnix) && ServerClock.IsSynced)

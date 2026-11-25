@@ -77,6 +77,60 @@ public class WaveRewardManager : MonoBehaviour
     public bool RewardsReady => rewardsReady;
     public bool RewardsClaimed => rewardsClaimed;
 
+    // FR-39: uloženie hry - počty obslúžených potrieb aktuálnej vlny.
+    public void CaptureSave(WaveSave save)
+    {
+        save.roomCount = roomCount;
+        save.relaxCount = relaxCount;
+        save.foodCount = foodCount;
+        save.drinkCount = drinkCount;
+
+        save.rewardsPending = rewardsReady && !rewardsClaimed;
+        save.pendingCoins = save.rewardsPending ? TotalCoins : 0;
+        save.pendingEnergy = save.rewardsPending ? TotalEnergy : 0;
+        save.pendingResortValue = save.rewardsPending ? TotalResortValue : 0;
+        save.rewardGuestCount = guestCount;
+        save.ratingPenaltyApplied = ratingPenaltyApplied;
+        save.ratingsBelowFiveAtWaveEnd = ratingsBelowFiveAtWaveEnd;
+        save.totalRatingsAtWaveEnd = totalRatingsAtWaveEnd;
+    }
+
+    // FR-39: odmeny, ktoré hráč pred zatvorením hry nevyzdvihol - znova sa ukáže panel s CLAIM.
+    public void RestorePendingRewards(WaveSave save)
+    {
+        if (save == null || !save.rewardsPending)
+            return;
+
+        ResetRewards();
+
+        roomCount = save.roomCount;
+        relaxCount = save.relaxCount;
+        foodCount = save.foodCount;
+        drinkCount = save.drinkCount;
+        guestCount = save.rewardGuestCount;
+
+        ratingPenaltyApplied = save.ratingPenaltyApplied;
+        ratingsBelowFiveAtWaveEnd = save.ratingsBelowFiveAtWaveEnd;
+        totalRatingsAtWaveEnd = save.totalRatingsAtWaveEnd;
+
+        waveAccepted = true;
+        rewardsReady = true;
+        rewardsClaimed = false;
+
+        Debug.Log("FR-39 | Nevyzdvihnuté odmeny čakajú: " + TotalCoins + " mincí, " + TotalEnergy +
+                  " energie, " + TotalResortValue + " hodnoty rezortu.");
+        RewardsBecameReady?.Invoke();
+    }
+
+    // FR-39: po obnovení prijatej vlny vráti počty obslúžených potrieb (nové potreby sa pripočítajú).
+    public void RestoreCounts(WaveSave save)
+    {
+        roomCount = Mathf.Max(roomCount, save.roomCount);
+        relaxCount = Mathf.Max(relaxCount, save.relaxCount);
+        foodCount = Mathf.Max(foodCount, save.foodCount);
+        drinkCount = Mathf.Max(drinkCount, save.drinkCount);
+    }
+
     private void OnEnable()
     {
         if (guestServiceManager == null)
@@ -276,6 +330,7 @@ public class WaveRewardManager : MonoBehaviour
 
         // Zamedzenie dvojitému vyplateniu.
         rewardsClaimed = true;
+        SaveManager.RequestSave();   // FR-39
 
         ResortResources.Instance.AddCoins(TotalCoins);
         ResortResources.Instance.AddEnergy(TotalEnergy);

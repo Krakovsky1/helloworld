@@ -40,6 +40,16 @@ public class ResortResources : MonoBehaviour
         if (Instance == this) Instance = null;
     }
 
+    // FR-39: obnova z uloženej hry (jedna udalosť Changed na konci).
+    public void Restore(int savedCoins, int savedGems, int savedEnergy, int savedResortValue)
+    {
+        coins = Mathf.Max(0, savedCoins);
+        gems = Mathf.Max(0, savedGems);
+        energy = Mathf.Clamp(savedEnergy, 0, MaxEnergy);
+        resortValue = Mathf.Max(0, savedResortValue);
+        Changed?.Invoke();
+    }
+
     public void SetCoins(int value) => Set(ref coins, value);
     public void SetGems(int value) => Set(ref gems, value);
     public void SetEnergy(int value) => Set(ref energy, Mathf.Min(value, MaxEnergy));

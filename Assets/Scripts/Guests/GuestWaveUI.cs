@@ -39,6 +39,64 @@ public class GuestWaveUI : MonoBehaviour
     private int currentWaveGuestCount;
     private bool waveDecisionMade;
 
+    // FR-39: obnova rozohranej vlny z uloženej hry (zostávajúci čas pobytu / cooldownu).
+    private float restoreStaySeconds = -1f;
+    private float restoreCooldownSeconds = -1f;
+
+    public float CooldownDuration => cooldownDuration;
+
+    // Prijatá vlna pokračuje v pobyte so zostávajúcim časom.
+    public void RestoreAccepted(float staySeconds)
+    {
+        restoreStaySeconds = Mathf.Max(1f, staySeconds);
+        AcceptAll();
+        restoreStaySeconds = -1f;
+    }
+
+    // Pobyt už skončil (alebo bola vlna odmietnutá) - hostia odchádzajú, cooldown pokračuje.
+    public void RestoreDeparture(bool accepted, float cooldownSeconds)
+    {
+        restoreCooldownSeconds = Mathf.Max(0f, cooldownSeconds);
+
+        if (accepted)
+        {
+            if (waveManager != null && waveManager.AcceptCurrentWave())
+            {
+                waveDecisionMade = true;
+
+                if (panel != null)
+                    panel.SetActive(false);
+
+                OnGuestStayTimerFinished();
+            }
+        }
+        else
+        {
+            RejectAll();
+        }
+
+        restoreCooldownSeconds = -1f;
+    }
+
+    // Hostia už odplávali - beží len cooldown do ďalšej vlny.
+    public void RestoreCooldown(float cooldownSeconds)
+    {
+        waveDecisionMade = true;
+
+        if (panel != null)
+            panel.SetActive(false);
+
+        HideGuestServicePanel();
+
+        if (guestStayTimer != null)
+            guestStayTimer.StartCooldown(Mathf.Max(0f, cooldownSeconds));
+    }
+
+    private float NextCooldownDuration()
+    {
+        return restoreCooldownSeconds >= 0f ? restoreCooldownSeconds : cooldownDuration;
+    }
+
     private void Awake()
     {
         if (guestServiceManager == null)
@@ -198,7 +256,10 @@ public class GuestWaveUI : MonoBehaviour
         if (guestServiceManager != null)
             guestServiceManager.ResetWaveRatings();
 
-        guestStayTimer.StartTimer(currentWaveGuestCount);
+        if (restoreStaySeconds > 0f)
+            guestStayTimer.StartStay(restoreStaySeconds);   // FR-39: pokračovanie po načítaní
+        else
+            guestStayTimer.StartTimer(currentWaveGuestCount);
 
         if (panel != null)
             panel.SetActive(false);
@@ -240,7 +301,7 @@ public class GuestWaveUI : MonoBehaviour
 
         HideGuestServicePanel();
 
-        guestStayTimer.StartCooldown(cooldownDuration);
+        guestStayTimer.StartCooldown(NextCooldownDuration());
 
         Debug.Log(
             "CelÃ¡ vlna bola odmietnutÃ¡. " +
@@ -257,7 +318,7 @@ public class GuestWaveUI : MonoBehaviour
 
         HideGuestServicePanel();
 
-        guestStayTimer.StartCooldown(cooldownDuration);
+        guestStayTimer.StartCooldown(NextCooldownDuration());
 
         Debug.Log(
             "Pobyt hostÃ­ skonÄil. " +
