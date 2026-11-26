@@ -24,6 +24,10 @@ public class WaveRewardManager : MonoBehaviour
     private readonly List<GuestNeeds> subscribedGuests =
         new List<GuestNeeds>();
 
+    // Každý hosť má vlastný handler, aby sme pri novej potrebe poznali jeho VIP násobiteľ.
+    private readonly Dictionary<GuestNeeds, Action<GuestNeed>> needAddedHandlers =
+        new Dictionary<GuestNeeds, Action<GuestNeed>>();
+
     private readonly HashSet<GuestNeed> countedNeeds =
         new HashSet<GuestNeed>();
 
@@ -33,7 +37,24 @@ public class WaveRewardManager : MonoBehaviour
     private int drinkCount;
 
     private int guestCount;
-    private int roomLimit;
+
+    // Oddelené VIP počty umožňujú násobiť iba odmeny, ktoré vytvoril VIP hosť.
+    private int vipGuestCount;
+    private int vipRoomCount;
+    private int vipRelaxCount;
+    private int vipFoodCount;
+    private int vipDrinkCount;
+    private float vipGuestMultiplierSum;
+    private float vipRoomMultiplierSum;
+    private float vipRelaxMultiplierSum;
+    private float vipFoodMultiplierSum;
+    private float vipDrinkMultiplierSum;
+
+    // Po obnovení nevyzdvihnutej odmeny použijeme presné uložené sumy.
+    private bool hasRestoredRewardTotals;
+    private int restoredTotalCoins;
+    private int restoredTotalEnergy;
+    private int restoredTotalResortValue;
 
     private bool waveAccepted;
     private bool rewardsReady;
@@ -50,21 +71,50 @@ public class WaveRewardManager : MonoBehaviour
     public int FoodCount => foodCount;
     public int DrinkCount => drinkCount;
 
-    private int BaseTotalCoins =>
+    private int BaseTotalCoins => Mathf.FloorToInt(
+        (roomCount - vipRoomCount) * roomReward + vipRoomMultiplierSum * roomReward +
+        (relaxCount - vipRelaxCount) * relaxReward + vipRelaxMultiplierSum * relaxReward +
+        (foodCount - vipFoodCount) * foodReward + vipFoodMultiplierSum * foodReward +
+        (drinkCount - vipDrinkCount) * drinkReward + vipDrinkMultiplierSum * drinkReward
+    );
+
+    private int BaseTotalEnergy => Mathf.FloorToInt(
+        (guestCount - vipGuestCount) * energyPerGuest + vipGuestMultiplierSum * energyPerGuest
+    );
+
+    private int BaseTotalResortValue => Mathf.FloorToInt(
+        (guestCount - vipGuestCount) * resortValuePerGuest + vipGuestMultiplierSum * resortValuePerGuest
+    );
+
+    // Základné odmeny bez VIP násobiteľa - používajú sa na výpočet
+    // samostatne zobraziteľného VIP bonusu.
+    private int BaseCoinsWithoutVipBonus =>
         roomCount * roomReward +
         relaxCount * relaxReward +
         foodCount * foodReward +
         drinkCount * drinkReward;
 
-    private int BaseTotalEnergy => guestCount * energyPerGuest;
+    private int BaseEnergyWithoutVipBonus => guestCount * energyPerGuest;
+    private int BaseResortValueWithoutVipBonus => guestCount * resortValuePerGuest;
 
-    private int BaseTotalResortValue =>
-        guestCount * resortValuePerGuest;
+    // VIP násobiteľ sa uplatní pred všeobecnou penalizáciou hodnotení.
+    public int TotalCoins => hasRestoredRewardTotals ? restoredTotalCoins : ApplyRatingPenalty(BaseTotalCoins);
+    public int TotalEnergy => hasRestoredRewardTotals ? restoredTotalEnergy : ApplyRatingPenalty(BaseTotalEnergy);
+    public int TotalResortValue => hasRestoredRewardTotals ? restoredTotalResortValue : ApplyRatingPenalty(BaseTotalResortValue);
 
-    // Penalizácia sa vyhodnotí po skončení vlny a platí pre všetky odmeny.
-    public int TotalCoins => ApplyRatingPenalty(BaseTotalCoins);
-    public int TotalEnergy => ApplyRatingPenalty(BaseTotalEnergy);
-    public int TotalResortValue => ApplyRatingPenalty(BaseTotalResortValue);
+    // Hodnoty, ktoré hráč získal navyše výhradne vďaka VIP násobiteľu.
+    // Sú už po prípadnej rating penalizácii, takže sa rovnajú rozdielu
+    // medzi konečnou odmenou s VIP a odmenou bez VIP.
+    public bool HasVipGuest => vipGuestCount > 0;
+    public float VipRewardMultiplier => vipGuestCount > 0
+        ? vipGuestMultiplierSum / vipGuestCount
+        : 1f;
+    public int VipBonusCoins => hasRestoredRewardTotals ? 0 :
+        TotalCoins - ApplyRatingPenalty(BaseCoinsWithoutVipBonus);
+    public int VipBonusEnergy => hasRestoredRewardTotals ? 0 :
+        TotalEnergy - ApplyRatingPenalty(BaseEnergyWithoutVipBonus);
+    public int VipBonusResortValue => hasRestoredRewardTotals ? 0 :
+        TotalResortValue - ApplyRatingPenalty(BaseResortValueWithoutVipBonus);
 
     public bool RatingPenaltyApplied => ratingPenaltyApplied;
     public int RatingsBelowFiveAtWaveEnd => ratingsBelowFiveAtWaveEnd;
@@ -112,6 +162,12 @@ public class WaveRewardManager : MonoBehaviour
         ratingPenaltyApplied = save.ratingPenaltyApplied;
         ratingsBelowFiveAtWaveEnd = save.ratingsBelowFiveAtWaveEnd;
         totalRatingsAtWaveEnd = save.totalRatingsAtWaveEnd;
+
+        // Uložené sumy už obsahujú VIP násobiteľ aj rating penalizáciu.
+        hasRestoredRewardTotals = true;
+        restoredTotalCoins = save.pendingCoins;
+        restoredTotalEnergy = save.pendingEnergy;
+        restoredTotalResortValue = save.pendingResortValue;
 
         waveAccepted = true;
         rewardsReady = true;
@@ -174,13 +230,6 @@ public class WaveRewardManager : MonoBehaviour
 
         guestCount = guests.Count;
 
-        if (guestCount <= 10)
-            roomLimit = 10;
-        else if (guestCount <= 15)
-            roomLimit = 15;
-        else
-            roomLimit = 20;
-
         foreach (GameObject guest in guests)
         {
             if (guest == null)
@@ -191,14 +240,31 @@ public class WaveRewardManager : MonoBehaviour
             if (needs == null)
                 continue;
 
-            needs.NeedAdded += OnNeedReceived;
+            VipGuestMarker vipMarker = guest.GetComponent<VipGuestMarker>();
+            bool isVip = vipMarker != null && vipMarker.Personality != null;
+            float multiplier = isVip
+                ? Mathf.Max(1f, vipMarker.Personality.rewardMultiplier)
+                : 1f;
+
+            if (isVip)
+            {
+                vipGuestCount++;
+                vipGuestMultiplierSum += multiplier;
+                Debug.Log("WaveRewardManager: VIP " + vipMarker.Personality.displayName +
+                          " | reward multiplier x" + multiplier);
+            }
+
+            Action<GuestNeed> handler = need => OnNeedCompleted(need, isVip, multiplier);
+            // Odmenu za službu započítame až vtedy, keď je potreba skutočne dokončená.
+            needs.NeedCompleted += handler;
+            needAddedHandlers[needs] = handler;
             subscribedGuests.Add(needs);
         }
 
         Debug.Log(
             "WaveRewardManager: Evidencia vlny spustená. " +
             "Hostia: " + guestCount +
-            ", Room limit: " + roomLimit
+            ", Guaranteed rooms: " + guestCount
         );
     }
 
@@ -206,6 +272,12 @@ public class WaveRewardManager : MonoBehaviour
     {
         waveAccepted = true;
 
+        // Kazdy host ma automaticky izbu: pocet izieb sa rovna velkosti vlny.
+        // VIP izby si zachovavaju VIP nasobitel, rovnako ako ostatne VIP odmeny.
+        roomCount = guestCount;
+        vipRoomCount = vipGuestCount;
+        vipRoomMultiplierSum = vipGuestMultiplierSum;
+
         foreach (GameObject guest in guests)
         {
             if (guest == null)
@@ -216,8 +288,17 @@ public class WaveRewardManager : MonoBehaviour
             if (needs == null)
                 continue;
 
+            VipGuestMarker vipMarker = guest.GetComponent<VipGuestMarker>();
+            bool isVip = vipMarker != null && vipMarker.Personality != null;
+            float multiplier = isVip
+                ? Mathf.Max(1f, vipMarker.Personality.rewardMultiplier)
+                : 1f;
+
             foreach (GuestNeed need in needs.Needs)
-                RegisterNeed(need);
+            {
+                if (need != null && need.IsCompleted)
+                    RegisterNeed(need, isVip, multiplier);
+            }
         }
 
         Debug.Log("WaveRewardManager: Vlna prijatá.");
@@ -234,15 +315,15 @@ public class WaveRewardManager : MonoBehaviour
         );
     }
 
-    private void OnNeedReceived(GuestNeed need)
+    private void OnNeedCompleted(GuestNeed need, bool isVip, float multiplier)
     {
         if (!waveAccepted || need == null)
             return;
 
-        RegisterNeed(need);
+        RegisterNeed(need, isVip, multiplier);
     }
 
-    private void RegisterNeed(GuestNeed need)
+    private void RegisterNeed(GuestNeed need, bool isVip, float multiplier)
     {
         if (need == null || !countedNeeds.Add(need))
             return;
@@ -250,25 +331,41 @@ public class WaveRewardManager : MonoBehaviour
         switch (need.Type)
         {
             case GuestNeedType.Room:
-                if (roomCount < roomLimit)
-                    roomCount++;
+                // Izba je garantovana pre kazdeho hosta pri prijati vlny.
+                // Dokoncenie Room potreby preto nesmie zapocitat druhu izbu.
                 break;
 
             case GuestNeedType.Relax:
                 relaxCount++;
+                if (isVip)
+                {
+                    vipRelaxCount++;
+                    vipRelaxMultiplierSum += multiplier;
+                }
                 break;
 
             case GuestNeedType.Food:
                 foodCount++;
+                if (isVip)
+                {
+                    vipFoodCount++;
+                    vipFoodMultiplierSum += multiplier;
+                }
                 break;
 
             case GuestNeedType.Drink:
                 drinkCount++;
+                if (isVip)
+                {
+                    vipDrinkCount++;
+                    vipDrinkMultiplierSum += multiplier;
+                }
                 break;
         }
 
         Debug.Log(
             "WaveRewardManager: Received " + need.Type +
+            (isVip ? " from VIP (x" + multiplier + ")" : " from regular guest") +
             " | Room: " + roomCount +
             " | Relax: " + relaxCount +
             " | Food: " + foodCount +
@@ -300,9 +397,9 @@ public class WaveRewardManager : MonoBehaviour
             "/" + totalRatingsAtWaveEnd +
             " (" + RatingsBelowFivePercentage.ToString("F1") + "%)" +
             "\nPenalty applied: " + ratingPenaltyApplied +
-            "\nCoins: " + TotalCoins +
-            "\nEnergy: " + TotalEnergy +
-            "\nResort value: " + TotalResortValue
+            "\nCoins: " + TotalCoins + " (VIP bonus: +" + VipBonusCoins + ")" +
+            "\nEnergy: " + TotalEnergy + " (VIP bonus: +" + VipBonusEnergy + ")" +
+            "\nResort value: " + TotalResortValue + " (VIP bonus: +" + VipBonusResortValue + ")"
         );
 
         // A teraz upozorníme UI, e môe zobrazi panel.
@@ -355,7 +452,22 @@ public class WaveRewardManager : MonoBehaviour
         drinkCount = 0;
 
         guestCount = 0;
-        roomLimit = 0;
+
+        vipGuestCount = 0;
+        vipRoomCount = 0;
+        vipRelaxCount = 0;
+        vipFoodCount = 0;
+        vipDrinkCount = 0;
+        vipGuestMultiplierSum = 0f;
+        vipRoomMultiplierSum = 0f;
+        vipRelaxMultiplierSum = 0f;
+        vipFoodMultiplierSum = 0f;
+        vipDrinkMultiplierSum = 0f;
+
+        hasRestoredRewardTotals = false;
+        restoredTotalCoins = 0;
+        restoredTotalEnergy = 0;
+        restoredTotalResortValue = 0;
 
         waveAccepted = false;
         rewardsReady = false;
@@ -398,10 +510,11 @@ public class WaveRewardManager : MonoBehaviour
     {
         foreach (GuestNeeds needs in subscribedGuests)
         {
-            if (needs != null)
-                needs.NeedAdded -= OnNeedReceived;
+            if (needs != null && needAddedHandlers.TryGetValue(needs, out Action<GuestNeed> handler))
+                needs.NeedCompleted -= handler;
         }
 
         subscribedGuests.Clear();
+        needAddedHandlers.Clear();
     }
 }

@@ -384,17 +384,27 @@ public class GuestWaveUI : MonoBehaviour
             drinkRewardText.text =
                 "Drink: " + rewardManager.DrinkCount;
 
+        string vipCoins = rewardManager.HasVipGuest
+            ? " <color=#55D995>(VIP +" + rewardManager.VipBonusCoins + ")</color>"
+            : "";
+        string vipEnergy = rewardManager.HasVipGuest
+            ? " <color=#55D995>(VIP +" + rewardManager.VipBonusEnergy + ")</color>"
+            : "";
+        string vipResort = rewardManager.HasVipGuest
+            ? " <color=#55D995>(VIP +" + rewardManager.VipBonusResortValue + ")</color>"
+            : "";
+
         if (totalCoinsText != null)
             totalCoinsText.text =
-                "Coins: " + rewardManager.TotalCoins;
+                "Coins: " + rewardManager.TotalCoins + vipCoins;
 
         if (totalEnergyText != null)
             totalEnergyText.text =
-                "Energy: +" + rewardManager.TotalEnergy;
+                "Energy: +" + rewardManager.TotalEnergy + vipEnergy;
 
         if (totalResortValueText != null)
             totalResortValueText.text =
-                "Resort Value: +" + rewardManager.TotalResortValue;
+                "Resort Value: +" + rewardManager.TotalResortValue + vipResort;
 
         RefreshStarRatingSummary();
     }
@@ -430,7 +440,10 @@ public class GuestWaveUI : MonoBehaviour
             guestServiceManager.RatingsBelowFivePercentage.ToString("F1") + "%)\n" +
             (rewardManager != null && rewardManager.RatingPenaltyApplied
                 ? "<color=#FF6B6B><b>REWARD PENALTY: -20%</b></color>"
-                : "<color=#7CFF9B><b>NO REWARD PENALTY</b></color>");
+                : "<color=#7CFF9B><b>NO REWARD PENALTY</b></color>") +
+            (rewardManager != null && rewardManager.HasVipGuest
+                ? "\n<color=#55D995><b>VIP BONUS APPLIED: x" + rewardManager.VipRewardMultiplier.ToString("0.##") + "</b></color>"
+                : "");
     }
 
     public void ClaimRewards()

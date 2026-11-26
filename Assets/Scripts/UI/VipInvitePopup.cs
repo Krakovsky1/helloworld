@@ -303,8 +303,12 @@ public class VipInvitePopup : MonoBehaviour
     void OnInviteClicked(Card card)
     {
         if (manager == null || card.vip == null) return;
-        Debug.Log("FR-31 | Klik na POZVAŤ: " + card.vip.displayName + " (pozývanie zatiaľ nie je zapnuté)");
-        // manager.TryInvite(card.vip);
+
+        bool success = manager.TryInvite(card.vip);
+
+        if (success)
+            Debug.Log("FR-31 | VIP úspešne pozvaný: " + card.vip.displayName);
+
         Refresh();
     }
 

@@ -346,6 +346,33 @@ public partial class GuestWaveManager : MonoBehaviour
             }
         }
 
+        // FR-31: Ak je na túto vlnu pozvaný VIP, vystúpi z tej istej lode
+        // a prejde rovnakou trasou ako bežní hostia.
+        VipInviteManager vipManager = VipInviteManager.Instance;
+        if (vipManager != null &&
+            vipManager.InvitedVip != null &&
+            vipManager.InvitedForWave == WaveNumber)
+        {
+            GameObject vipGuest = SpawnVipGuest(vipManager.InvitedVip, exit, walk);
+
+            if (vipGuest != null)
+            {
+                currentWaveGuests.Add(vipGuest);
+                ExpectedGuests++;
+
+                Debug.Log(
+                    "FR-31 | VIP " + vipManager.InvitedVip.displayName +
+                    " nastúpil do vlny " + WaveNumber + "."
+                );
+            }
+            else
+            {
+                Debug.LogError(
+                    "FR-31 | VIP sa nepodarilo vytvoriť. Skontroluj model v VipPersonality."
+                );
+            }
+        }
+
         // Loď ešte chvíľu čaká.
         float wait = 0f;
 
@@ -547,6 +574,45 @@ public partial class GuestWaveManager : MonoBehaviour
 
         guest.SetActive(true);
 
+        StartCoroutine(WalkGuest(guest, start, path));
+
+        return guest;
+    }
+
+    // Vytvorí VIP hosťa z modelu a rigu uloženého v jeho VipPersonality.
+    // Zvyšok životného cyklu (potreby, ubytovanie, evidencia príchodu)
+    // používa rovnaký systém ako pri bežných hosťoch.
+    GameObject SpawnVipGuest(VipPersonality vip, Vector3 start, List<Vector3> path)
+    {
+        if (vip == null || vip.model == null)
+            return null;
+
+        var vipModel = new GuestModel
+        {
+            model = vip.model,
+            rig = vip.rig
+        };
+
+        var guest = BuildGuest(vipModel);
+        guest.name = "VIP_" + vip.displayName;
+
+        // Značka musí byť pridaná ešte pred aktivovaním objektu,
+        // aby ju GuestNeedsGenerator našiel pri svojom Awake().
+        var vipMarker = guest.GetComponent<VipGuestMarker>();
+        if (vipMarker == null)
+            vipMarker = guest.AddComponent<VipGuestMarker>();
+        vipMarker.Initialize(vip);
+
+        guest.transform.position = start;
+
+        if (path != null && path.Count > 0)
+        {
+            var dir = Flat(path[0] - start);
+            if (dir.sqrMagnitude > 0.0001f)
+                guest.transform.rotation = Quaternion.LookRotation(dir);
+        }
+
+        guest.SetActive(true);
         StartCoroutine(WalkGuest(guest, start, path));
 
         return guest;

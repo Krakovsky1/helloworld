@@ -1433,8 +1433,6 @@ RectTransform:
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 286920530}
-  - {fileID: 1332334063}
-  - {fileID: 1929188811}
   m_Father: {fileID: 438902733}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -1497,8 +1495,9 @@ MonoBehaviour:
   requestList: {fileID: 286920530}
   requestRowTemplate: {fileID: 1444186901}
   staffCountText: {fileID: 1332334064}
-  hireStaffButton: {fileID: 1929188812}
-  hireStaffButtonText: {fileID: 188244744}
+  vipRowColor: {r: 0.24, g: 0.18, b: 0.08, a: 1}
+  vipTextColor: {r: 1, g: 0.78, b: 0.28, a: 1}
+  vipOutlineColor: {r: 1, g: 0.68, b: 0.16, a: 1}
 --- !u!1001 &217581498
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -2823,7 +2822,8 @@ MonoBehaviour:
   guestList: {fileID: 1943136525}
   guestRowTemplate: {fileID: 1389681328}
   guestCountText: {fileID: 442981196}
-  guestServiceUI: {fileID: 0}
+  guestServiceUI: {fileID: 206906322}
+  guestServicePanel: {fileID: 206906318}
   rewardManager: {fileID: 1626866307}
   rewardPanel: {fileID: 230087591}
   roomRewardText: {fileID: 725197876}
@@ -2834,7 +2834,7 @@ MonoBehaviour:
   totalEnergyText: {fileID: 578332886}
   totalResortValueText: {fileID: 1189400804}
   starRatingSummaryText: {fileID: 67095255}
-  guestServiceManager: {fileID: 0}
+  guestServiceManager: {fileID: 2068944944}
   cooldownDuration: 120
 --- !u!114 &438902730
 MonoBehaviour:
@@ -2916,6 +2916,8 @@ RectTransform:
   - {fileID: 1749932913}
   - {fileID: 230087592}
   - {fileID: 206906319}
+  - {fileID: 1332334063}
+  - {fileID: 1929188811}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -3956,8 +3958,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
-  m_fontSizeBase: 40
+  m_fontSize: 35
+  m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -6658,8 +6660,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
-  m_fontSizeBase: 40
+  m_fontSize: 35
+  m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7210,8 +7212,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 40
-  m_fontSizeBase: 40
+  m_fontSize: 35
+  m_fontSizeBase: 35
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -7790,12 +7792,12 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1332334062}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 206906319}
+  m_Father: {fileID: 438902733}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
@@ -8870,7 +8872,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
   m_Material: {fileID: 0}
-  m_Color: {r: 0.5613208, g: 0.9816989, b: 1, a: 1}
+  m_Color: {r: 0.9811321, g: 0.7763502, b: 0.36561054, a: 1}
   m_RaycastTarget: 1
   m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
   m_Maskable: 1
@@ -10048,6 +10050,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::WaveRewardManager
   waveManager: {fileID: 1418876672}
+  guestServiceManager: {fileID: 0}
+  ratingPenaltyPercent: 20
   roomReward: 8
   relaxReward: 5
   foodReward: 3
@@ -12126,6 +12130,7 @@ GameObject:
   - component: {fileID: 1929188814}
   - component: {fileID: 1929188813}
   - component: {fileID: 1929188812}
+  - component: {fileID: 1929188815}
   m_Layer: 5
   m_Name: HireStaffButton
   m_TagString: Untagged
@@ -12140,13 +12145,13 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1929188810}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 188244743}
-  m_Father: {fileID: 206906319}
+  m_Father: {fileID: 438902733}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 1}
   m_AnchorMax: {x: 0.5, y: 1}
@@ -12196,7 +12201,19 @@ MonoBehaviour:
   m_TargetGraphic: {fileID: 1929188813}
   m_OnClick:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 2068944942}
+        m_TargetAssemblyTypeName: StaffManager, Assembly-CSharp
+        m_MethodName: HireStaffFromButton
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!114 &1929188813
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12235,6 +12252,22 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1929188810}
   m_CullTransparentMesh: 1
+--- !u!114 &1929188815
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1929188810}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 83085cee9aca6c1439241b0b5f3fad63, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::StaffHUD
+  staffManager: {fileID: 2068944942}
+  staffCountText: {fileID: 1332334064}
+  hireStaffButton: {fileID: 1929188812}
+  hireButtonText: {fileID: 188244744}
 --- !u!1 &1933741375
 GameObject:
   m_ObjectHideFlags: 0
@@ -13680,7 +13713,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::StaffManager
   startingStaff: 6
   maxStaff: 20
-  hireCost: 120
+  firstHireCost: 120
+  hireCostIncrease: 20
 --- !u!4 &2068944943
 Transform:
   m_ObjectHideFlags: 0
@@ -13709,6 +13743,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GuestServiceManager
   serviceDuration: 15
+  maxActiveRequests: 7
   staffManager: {fileID: 2068944942}
 --- !u!1 &2074501805
 GameObject:
@@ -14052,7 +14087,7 @@ MonoBehaviour:
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -14320,6 +14355,7 @@ MonoBehaviour:
     upgradeEnergy: 0200000004000000i
   iconSize: 48
   heightAboveBuilding: 0.6
+  iconOffsetY: -22
 --- !u!1 &2114870383
 GameObject:
   m_ObjectHideFlags: 0
@@ -15560,63 +15596,7 @@ MonoBehaviour:
   iconSize: 78
   plusHeight: 1.2
   heightAboveModel: 0.8
---- !u!1001 &8229895696240140921
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    serializedVersion: 3
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 7.178
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.846
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 4.777
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: -0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 3026815851807997698, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
-      propertyPath: m_Name
-      value: Bush_Flowers
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-    m_RemovedGameObjects: []
-    m_AddedGameObjects: []
-    m_AddedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+  iconOffsetY: -22
 --- !u!1 &3400000001
 GameObject:
   m_ObjectHideFlags: 0
@@ -15679,6 +15659,63 @@ MonoBehaviour:
   plusHeight: 1.2
   heightAboveModel: 0.8
   iconOffsetY: -22
+--- !u!1001 &8229895696240140921
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 7.178
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.846
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 4.777
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: -0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2398932432733152696, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3026815851807997698, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
+      propertyPath: m_Name
+      value: Bush_Flowers
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 586d92f16488d8b439b6a015ea528458, type: 3}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0
@@ -15758,3 +15795,17 @@ SceneRoots:
   - {fileID: 1626866308}
   - {fileID: 2068944943}
   - {fileID: 3400000002}
+  - {fileID: 3300000002}
+  - {fileID: 178953058}
+  - {fileID: 434839943}
+  - {fileID: 645297160}
+  - {fileID: 22989145}
+  - {fileID: 852713951}
+  - {fileID: 1700090160}
+  - {fileID: 179798613}
+  - {fileID: 801831899}
+  - {fileID: 1557753836}
+  - {fileID: 1806584698}
+  - {fileID: 1772073588}
+  - {fileID: 1365453838}
+  - {fileID: 1339555676}
