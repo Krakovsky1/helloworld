@@ -16,7 +16,7 @@ public class ResortResources : MonoBehaviour
     [SerializeField] int energy = 50;
     [Tooltip("Najviac energie, ktorú môže hráč mať (HUD ukazuje napr. 45/50)")]
     [SerializeField] int maxEnergy = 50;
-    [SerializeField] int resortValue = 5;
+    [SerializeField] int resortValue = 55;
 
     public int Coins => coins;
     public int Gems => gems;

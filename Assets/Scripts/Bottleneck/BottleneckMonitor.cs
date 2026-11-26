@@ -47,6 +47,8 @@ public class BottleneckMonitor : MonoBehaviour
 
     static bool sceneHooked;
 
+    private bool duplicateInstance;
+
     // ---------------- automatické vytvorenie na ostrove (rovnako ako ResourceHud) ----------------
 
     [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
@@ -77,7 +79,6 @@ public class BottleneckMonitor : MonoBehaviour
             var go = new GameObject("BottleneckWarnings");
             DontDestroyOnLoad(go);
             go.AddComponent<BottleneckMonitor>();
-            go.AddComponent<BottleneckWarningUI>();
             return;
         }
 
@@ -148,18 +149,15 @@ public class BottleneckMonitor : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
+            // Destroy() odstráni komponent až na konci frame.
+            // Zabráň Update() na duplicitnej inštancii ešte v tomto frame.
+            duplicateInstance = true;
             Destroy(this);
             return;
         }
-        Instance = this;
 
-        foreach (var s in BottleneckServiceInfo.All)
-        {
-            entries[(int)s] = new Entry
-            {
-                state = BottleneckServiceInfo.LockedAtStart(s) ? BottleneckState.Locked : BottleneckState.Ok
-            };
-        }
+        Instance = this;
+        EnsureEntriesInitialized();
     }
 
     void OnDestroy()
@@ -169,9 +167,55 @@ public class BottleneckMonitor : MonoBehaviour
 
     void Update()
     {
+        if (duplicateInstance)
+            return;
+
+        // Ochrana pred neinicializovanou položkou entries[].
+        EnsureEntriesInitialized();
+
         float dt = Time.deltaTime;
         foreach (var s in BottleneckServiceInfo.All)
-            Tick(s, entries[(int)s], dt);
+        {
+            int index = (int)s;
+            if (index < 0 || index >= entries.Length)
+            {
+                Debug.LogError("BottleneckMonitor: Neplatný index služby " + s + ". Skontroluj BottleneckService.cs.");
+                continue;
+            }
+
+            Entry entry = entries[index];
+            if (entry == null)
+            {
+                Debug.LogError("BottleneckMonitor: Chýba inicializácia služby " + s + ". Preskakujem Tick.");
+                continue;
+            }
+
+            Tick(s, entry, dt);
+        }
+    }
+
+    private void EnsureEntriesInitialized()
+    {
+        foreach (var service in BottleneckServiceInfo.All)
+        {
+            int index = (int)service;
+            if (index < 0 || index >= entries.Length)
+            {
+                Debug.LogError("BottleneckMonitor: Služba " + service +
+                               " má index mimo rozsahu entries[]. Skontroluj BottleneckService.cs.");
+                continue;
+            }
+
+            if (entries[index] == null)
+            {
+                entries[index] = new Entry
+                {
+                    state = BottleneckServiceInfo.LockedAtStart(service)
+                        ? BottleneckState.Locked
+                        : BottleneckState.Ok
+                };
+            }
+        }
     }
 
     void Tick(BottleneckService service, Entry e, float dt)
