@@ -70,7 +70,7 @@ public class GuestStayTimer : MonoBehaviour
 
         if (isCooldown)
         {
-            timerText.text = "NEXT WAVE IN:\n02:00";
+            GameTextView.Set(timerText, () => GameText.Get("next_wave_in", "02:00"));
         }
 
         timerCoroutine = StartCoroutine(
@@ -147,8 +147,8 @@ public class GuestStayTimer : MonoBehaviour
         string time = $"{minutes:00}:{seconds:00}";
 
         if (isCooldown)
-            timerText.text = "NEXT WAVE IN:\n" + time;
+            GameTextView.Set(timerText, () => GameText.Get("next_wave_in", time));
         else
-            timerText.text = time;
+            GameTextView.Set(timerText, () => time);
     }
 }

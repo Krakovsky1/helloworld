@@ -1,0 +1,735 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: GameTexts_sk
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: sk
+  m_SharedData: {fileID: 11400000, guid: 59d55f452211f734a869e43a77bdff31, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 2041501712384
+    m_Localized: "SPUSTI\u0164 VLNU"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041581404160
+    m_Localized: "\u017DIADNA AKT\xCDVNA VLNA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041585598464
+    m_Localized: "KAPACITA SLU\u017DIEB"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041585598465
+    m_Localized: "SLU\u017DBY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792768
+    m_Localized: "N\xC1POJE"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792769
+    m_Localized: JEDLO
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792770
+    m_Localized: S
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792771
+    m_Localized: N
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792772
+    m_Localized: J
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987072
+    m_Localized: TROPICAL RESORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987073
+    m_Localized: "PR\xCDCHOD HOST\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987074
+    m_Localized: "PRIJA\u0164 V\u0160ETK\xDDCH"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987075
+    m_Localized: "ODMIETNU\u0164 V\u0160ETK\xDDCH"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987076
+    m_Localized: "VYZDVIHN\xDA\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987077
+    m_Localized: ODMENA ZA VLNU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987078
+    m_Localized: 'HOSTIA: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987079
+    m_Localized: "Meno hos\u0165a"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987080
+    m_Localized: "Nezn\xE1my hos\u0165"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987081
+    m_Localized: "\u010EAL\u0160IA VLNA O:\n{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987082
+    m_Localized: "Bez po\u017Eiadaviek"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987083
+    m_Localized: "\u017Diadne akt\xEDvne po\u017Eiadavky"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987084
+    m_Localized: Ubytovanie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987085
+    m_Localized: "N\xE1poj"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987086
+    m_Localized: Jedlo
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987087
+    m_Localized: Oddych
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987088
+    m_Localized: 'Ubytovanie: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987089
+    m_Localized: 'Oddych: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987090
+    m_Localized: 'Jedlo: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987091
+    m_Localized: "N\xE1poje: {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987092
+    m_Localized: 'Mince: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987093
+    m_Localized: 'Energia: +{0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987094
+    m_Localized: 'Hodnota rezortu: +{0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987095
+    m_Localized: "ZHRNUTIE VLNY\nBez \xFAdajov o hodnoten\xED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987096
+    m_Localized: "HODNOTENIE HOST\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987097
+    m_Localized: "5 HVIEZDI\u010CIEK       {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987098
+    m_Localized: "4 HVIEZDI\u010CKY       {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987099
+    m_Localized: "3 HVIEZDI\u010CKY       {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987100
+    m_Localized: "2 HVIEZDI\u010CKY       {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987101
+    m_Localized: "1 HVIEZDI\u010CKA       {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987102
+    m_Localized: 'CELKOM: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987103
+    m_Localized: "Menej ako 5 hviezdi\u010Diek: {0}/{1} ({2} %)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987104
+    m_Localized: "ZN\xCD\u017DENIE ODMENY: -20 %"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987105
+    m_Localized: "BEZ ZN\xCD\u017DENIA ODMENY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987106
+    m_Localized: "PERSON\xC1L: {0}/{1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987107
+    m_Localized: "PRIJA\u0164 ZAMESTNANCA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987108
+    m_Localized: "PRIJA\u0164 ZAMESTNANCA \u2013 {0} MINC\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987109
+    m_Localized: "+ PRIJA\u0164 ZAMESTNANCA\n{0} MINC\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987110
+    m_Localized: "MAX. PERSON\xC1L"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987111
+    m_Localized: "PRIRADI\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987112
+    m_Localized: OBSLUHUJE SA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987113
+    m_Localized: "RE\u0160TAUR\xC1CIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987114
+    m_Localized: "BAR / N\xC1POJ"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987115
+    m_Localized: ODDYCH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987116
+    m_Localized: UBYTOVANIE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987117
+    m_Localized: Recepcia
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987118
+    m_Localized: "Pl\xE1\u017Eov\xFD bar"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987119
+    m_Localized: "Re\u0161taur\xE1cia"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987120
+    m_Localized: "Baz\xE9n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987121
+    m_Localized: Bungalovy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987122
+    m_Localized: Hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987123
+    m_Localized: Wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987124
+    m_Localized: "Recepcia je pln\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987125
+    m_Localized: "Pl\xE1\u017Eov\xFD bar je pln\xFD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987126
+    m_Localized: "Re\u0161taur\xE1cia je pln\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987127
+    m_Localized: "Baz\xE9n je pln\xFD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987128
+    m_Localized: "Bungalovy s\xFA pln\xE9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987129
+    m_Localized: "Recepcia je vo\u013En\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987130
+    m_Localized: "Pl\xE1\u017Eov\xFD bar je vo\u013En\xFD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987131
+    m_Localized: "Re\u0161taur\xE1cia je vo\u013En\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987132
+    m_Localized: "Baz\xE9n je vo\u013En\xFD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987133
+    m_Localized: "Bungalovy s\xFA vo\u013En\xE9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987134
+    m_Localized: "Recepcia nest\xEDha"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987135
+    m_Localized: "Pl\xE1\u017Eov\xFD bar nest\xEDha"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987136
+    m_Localized: "Re\u0161taur\xE1cia nest\xEDha"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987137
+    m_Localized: "Baz\xE9n nest\xEDha"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987138
+    m_Localized: "Bungalovy nest\xEDhaj\xFA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987139
+    m_Localized: "{0} ({1} \u010Dak\xE1)"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987140
+    m_Localized: '{0} ({1})'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987141
+    m_Localized: Mince
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987142
+    m_Localized: Drahokamy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987143
+    m_Localized: Energia
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987144
+    m_Localized: Hodnota rezortu
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987145
+    m_Localized: "VYLEP\u0160I\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987146
+    m_Localized: "POSTAVI\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987147
+    m_Localized: "ZAVRIE\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987148
+    m_Localized: "DOKON\u010CI\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987149
+    m_Localized: ZA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375680
+    m_Localized: TERAZ
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375681
+    m_Localized: "PO POSTAVEN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375682
+    m_Localized: "PO VYLEP\u0160EN\xCD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375683
+    m_Localized: "CENA A \u010CAS STAVBY"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375684
+    m_Localized: "CENA A \u010CAS VYLEP\u0160ENIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375685
+    m_Localized: "CENA VYLEP\u0160ENIA"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375686
+    m_Localized: "Nepostaven\xE9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375687
+    m_Localized: "\xDArove\u0148 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375688
+    m_Localized: "\xDArove\u0148 {0} z {1}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375689
+    m_Localized: "MAX. \xDAROVE\u0147"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375690
+    m_Localized: "{0} \u2013 dosiahnut\xE1 najvy\u0161\u0161ia \xFArove\u0148."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375691
+    m_Localized: "Stavba \u2013 \xFArove\u0148 1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375692
+    m_Localized: "Vylep\u0161enie na \xFArove\u0148 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375693
+    m_Localized: "Nov\xE1 budova \u2013 najviac \xFArove\u0148 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375694
+    m_Localized: "Najprv vylep\u0161i hotel na \xFArove\u0148 {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375695
+    m_Localized: "Vylep\u0161i\u0165 hotel"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375696
+    m_Localized: "Vylep\u0161i\u0165 re\u0161taur\xE1ciu"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375697
+    m_Localized: "Vylep\u0161i\u0165 pl\xE1\u017Eov\xFD bar"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375698
+    m_Localized: "Vylep\u0161i\u0165 baz\xE9n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375699
+    m_Localized: "Vylep\u0161i\u0165 wellness"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375700
+    m_Localized: "Postavi\u0165 hotel"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375701
+    m_Localized: "Postavi\u0165 re\u0161taur\xE1ciu"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375702
+    m_Localized: "Postavi\u0165 pl\xE1\u017Eov\xFD bar"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375703
+    m_Localized: "Postavi\u0165 baz\xE9n"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375704
+    m_Localized: "Postavi\u0165 wellness"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375705
+    m_Localized: "Hne\u010F"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375706
+    m_Localized: "\u010Cak\xE1 na \u010Das\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375707
+    m_Localized: Stavba {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375708
+    m_Localized: "\u010Cak\xE1m na pripojenie k internetu\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375709
+    m_Localized: "Zdroje rezortu nie s\xFA dostupn\xE9"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375710
+    m_Localized: "Nedostatok minc\xED"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375711
+    m_Localized: Nedostatok energie
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375712
+    m_Localized: "Nedostatok minc\xED aj energie"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375713
+    m_Localized: "Nedostatok minc\xED \u2013 ch\xFDba ti {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375714
+    m_Localized: "Nedostatok energie \u2013 ch\xFDba ti {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375715
+    m_Localized: "Nedostatok drahokamov \u2013 ch\xFDba ti {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375716
+    m_Localized: "Nedostatok minc\xED \u2013 m\xF4\u017Ee\u0161 zaplati\u0165 drahokamami"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375717
+    m_Localized: "Nedostatok energie \u2013 m\xF4\u017Ee\u0161 zaplati\u0165 drahokamami"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375718
+    m_Localized: "Nedostatok minc\xED aj energie \u2013 m\xF4\u017Ee\u0161 zaplati\u0165 drahokamami"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375719
+    m_Localized: "Nedostatok minc\xED aj drahokamov"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375720
+    m_Localized: Nedostatok energie aj drahokamov
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375721
+    m_Localized: "Nedostatok minc\xED, energie aj drahokamov"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375722
+    m_Localized: VIP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375723
+    m_Localized: VIP HOSTIA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375724
+    m_Localized: "Pozvi jedn\xE9ho VIP hos\u0165a \u2013 pr\xEDde spolu s \u010Fal\u0161ou vlnou. Ponuka sa obmen\xED po vlne."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375725
+    m_Localized: "{0} pr\xEDde s vlnou {1}. Nov\xE1 ponuka bude po skon\u010Den\xED tejto vlny."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375726
+    m_Localized: "N\xE1sobite\u013E odmien \xD7{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375727
+    m_Localized: "POZVAN\xDD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375728
+    m_Localized: "POZVA\u0164"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375729
+    m_Localized: PODMIENKY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375730
+    m_Localized: CENA POZVANIA
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375731
+    m_Localized: HODNOTA REZORTU
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375732
+    m_Localized: BUDOVY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375733
+    m_Localized: "Bez po\u017Eiadaviek"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375734
+    m_Localized: "Be\u017En\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375735
+    m_Localized: "Vz\xE1cna"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375736
+    m_Localized: "Epick\xE1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375737
+    m_Localized: "Legend\xE1rna"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375738
+    m_Localized: "Tento VIP hos\u0165 u\u017E nie je v ponuke"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375739
+    m_Localized: "U\u017E je pozvan\xFD"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375740
+    m_Localized: "Naraz m\xF4\u017Ee\u0161 pozva\u0165 len jedn\xE9ho VIP hos\u0165a"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375741
+    m_Localized: "Nesp\u013A\u0148a\u0161 podmienky"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375742
+    m_Localized: 'Mince: {0} / {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569984
+    m_Localized: 'Hodnota rezortu: {0} / {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569985
+    m_Localized: '{0}: {1} / {2}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569986
+    m_Localized: '{0} {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569987
+    m_Localized: "\xDAr. {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569988
+    m_Localized: MAX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569989
+    m_Localized: "Cestovate\u013Esk\xE1 vloggerka"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569990
+    m_Localized: "Fotograf pr\xEDrody"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569991
+    m_Localized: Fitness influencerka
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569992
+    m_Localized: Food bloger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569993
+    m_Localized: "DJ a hudobn\xFD producent"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569994
+    m_Localized: "Spisovate\u013Eka bestsellerov"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569995
+    m_Localized: "Futbalov\xE1 hviezda"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569996
+    m_Localized: "Celebrity \u0161\xE9fkuch\xE1r"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569997
+    m_Localized: "Filmov\xE1 here\u010Dka"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569998
+    m_Localized: "Popov\xE1 hviezda"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569999
+    m_Localized: "Nat\xE1\u010Da vide\xE1 z exotick\xFDch miest pre pol mili\xF3na sledovate\u013Eov. Sta\u010D\xED jej \xFAtuln\xFD hotel a pekn\xFD v\xFDh\u013Ead."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570000
+    m_Localized: "Fot\xED z\xE1pady slnka a tropick\xFA pr\xEDrodu pre cestovn\xE9 magaz\xEDny. Po celodennom foten\xED si r\xE1d d\xE1 drink."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570001
+    m_Localized: "Rann\xE9 cvi\u010Denie, zdrav\xE9 smoothie a stories pri baz\xE9ne. Bez baz\xE9na nepr\xEDde."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570002
+    m_Localized: "Hodnot\xED re\u0161taur\xE1cie po celom svete. Jeho recenzia vie rezortu prinies\u0165 z\xE1stupy host\xED."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570003
+    m_Localized: "Hr\xE1 na najv\xE4\u010D\u0161\xEDch pl\xE1\u017Eov\xFDch p\xE1rty. Chce \u0161pi\u010Dkov\xFD bar a baz\xE9n na after party."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570004
+    m_Localized: "Na ostrov prich\xE1dza dop\xEDsa\u0165 nov\xFA knihu. Potrebuje pokoj, wellness a pohodln\xFD hotel."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570005
+    m_Localized: "Kapit\xE1n reprezent\xE1cie si u\u017E\xEDva dovolenku po sez\xF3ne. O\u010Dak\xE1va luxusn\xFD hotel a najlep\u0161\xED baz\xE9n."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570006
+    m_Localized: "Majite\u013E ocenen\xFDch re\u0161taur\xE1ci\xED a hviezda kulin\xE1rskych show. Skontroluje ka\u017Ed\xFA kuchy\u0148u aj bar."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570007
+    m_Localized: "Hviezda ve\u013Ek\xFDch filmov h\u013Ead\xE1 s\xFAkromie a relax. Prijme len luxusn\xFD hotel s najlep\u0161\xEDm wellness."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570008
+    m_Localized: "Najzn\xE1mej\u0161ia spev\xE1\u010Dka sveta. Jej n\xE1v\u0161teva presl\xE1vi rezort - ale v\u0161etko mus\xED by\u0165 dokonal\xE9."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570009
+    m_Localized: Jazyk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570010
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570011
+    m_Localized: "Sloven\u010Dina"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []

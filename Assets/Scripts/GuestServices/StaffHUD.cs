@@ -53,18 +53,16 @@ public class StaffHUD : MonoBehaviour
 
         if (staffCountText != null)
         {
-            staffCountText.text =
-                "STAFF: " +
-                staffManager.AvailableStaff + "/" +
-                staffManager.TotalStaff;
+            GameTextBinding.Set(staffCountText, "staff_count",
+                staffManager.AvailableStaff, staffManager.TotalStaff);
         }
 
         if (hireButtonText != null)
         {
-            hireButtonText.text =
-                staffManager.TotalStaff >= 20
-                ? "MAX STAFF"
-                : "+ HIRE STAFF\n120 COINS";
+            if (staffManager.TotalStaff >= 20)
+                GameTextBinding.Set(hireButtonText, "max_staff");
+            else
+                GameTextBinding.Set(hireButtonText, "hire_staff_hud", 120);
         }
 
         if (hireStaffButton != null)

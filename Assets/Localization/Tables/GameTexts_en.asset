@@ -1,0 +1,741 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e9620f8c34305754d8cc9a7e49e852d9, type: 3}
+  m_Name: GameTexts_en
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.StringTable
+  m_LocaleId:
+    m_Code: en
+  m_SharedData: {fileID: 11400000, guid: 59d55f452211f734a869e43a77bdff31, type: 2}
+  m_Metadata:
+    m_Items: []
+  m_TableData:
+  - m_Id: 2041501712384
+    m_Localized: START WAVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041581404160
+    m_Localized: NO ACTIVE WAVE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041585598464
+    m_Localized: SERVICE CAPACITY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041585598465
+    m_Localized: SERVICES
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792768
+    m_Localized: DRINKS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792769
+    m_Localized: FOOD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792770
+    m_Localized: S
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792771
+    m_Localized: D
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792772
+    m_Localized: F
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987072
+    m_Localized: TROPICAL RESORT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987073
+    m_Localized: GUEST ARRIVAL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987074
+    m_Localized: ACCEPT ALL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987075
+    m_Localized: REJECT ALL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987076
+    m_Localized: CLAIM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987077
+    m_Localized: WAVE REWARD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987078
+    m_Localized: 'GUESTS: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987079
+    m_Localized: Guest name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987080
+    m_Localized: Unknown guest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987081
+    m_Localized: 'NEXT WAVE IN:
+
+      {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987082
+    m_Localized: No needs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987083
+    m_Localized: No active needs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987084
+    m_Localized: Room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987085
+    m_Localized: Drink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987086
+    m_Localized: Food
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987087
+    m_Localized: Relax
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987088
+    m_Localized: 'Room: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987089
+    m_Localized: 'Relax: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987090
+    m_Localized: 'Food: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987091
+    m_Localized: 'Drink: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987092
+    m_Localized: 'Coins: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987093
+    m_Localized: 'Energy: +{0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987094
+    m_Localized: 'Resort Value: +{0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987095
+    m_Localized: 'WAVE SUMMARY
+
+      No rating data'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987096
+    m_Localized: GUEST RATING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987097
+    m_Localized: 5 STARS       {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987098
+    m_Localized: 4 STARS       {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987099
+    m_Localized: 3 STARS       {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987100
+    m_Localized: 2 STARS       {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987101
+    m_Localized: 1 STAR        {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987102
+    m_Localized: 'TOTAL: {0}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987103
+    m_Localized: 'Below 5 stars: {0}/{1} ({2}%)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987104
+    m_Localized: 'REWARD PENALTY: -20%'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987105
+    m_Localized: NO REWARD PENALTY
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987106
+    m_Localized: 'STAFF: {0}/{1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987107
+    m_Localized: HIRE STAFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987108
+    m_Localized: HIRE STAFF - {0} COINS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987109
+    m_Localized: '+ HIRE STAFF
+
+      {0} COINS'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987110
+    m_Localized: MAX STAFF
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987111
+    m_Localized: ASSIGN
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987112
+    m_Localized: BEING SERVED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987113
+    m_Localized: RESTAURANT
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987114
+    m_Localized: BAR / DRINK
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987115
+    m_Localized: RELAX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987116
+    m_Localized: ROOM
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987117
+    m_Localized: Reception
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987118
+    m_Localized: Beach bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987119
+    m_Localized: Restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987120
+    m_Localized: Pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987121
+    m_Localized: Bungalows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987122
+    m_Localized: Hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987123
+    m_Localized: Wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987124
+    m_Localized: Reception is full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987125
+    m_Localized: Beach bar is full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987126
+    m_Localized: Restaurant is full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987127
+    m_Localized: Pool is full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987128
+    m_Localized: Bungalows are full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987129
+    m_Localized: Reception is available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987130
+    m_Localized: Beach bar is available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987131
+    m_Localized: Restaurant is available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987132
+    m_Localized: Pool is available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987133
+    m_Localized: Bungalows are available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987134
+    m_Localized: Reception is overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987135
+    m_Localized: Beach bar is overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987136
+    m_Localized: Restaurant is overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987137
+    m_Localized: Pool is overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987138
+    m_Localized: Bungalows are overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987139
+    m_Localized: '{0} ({1} waiting)'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987140
+    m_Localized: '{0} ({1})'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987141
+    m_Localized: Coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987142
+    m_Localized: Gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987143
+    m_Localized: Energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987144
+    m_Localized: Resort value
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987145
+    m_Localized: UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987146
+    m_Localized: BUILD
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987147
+    m_Localized: CLOSE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987148
+    m_Localized: FINISH
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987149
+    m_Localized: FOR
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375680
+    m_Localized: NOW
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375681
+    m_Localized: AFTER BUILDING
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375682
+    m_Localized: AFTER UPGRADE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375683
+    m_Localized: BUILD COST AND TIME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375684
+    m_Localized: UPGRADE COST AND TIME
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375685
+    m_Localized: UPGRADE COST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375686
+    m_Localized: Not built
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375687
+    m_Localized: Level {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375688
+    m_Localized: Level {0} of {1}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375689
+    m_Localized: MAX LEVEL
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375690
+    m_Localized: "{0} \u2013 maximum level reached."
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375691
+    m_Localized: "Construction \u2013 Level 1"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375692
+    m_Localized: Upgrade to Level {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375693
+    m_Localized: "New building \u2013 up to Level {0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375694
+    m_Localized: Upgrade the hotel to Level {0} first
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375695
+    m_Localized: Upgrade hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375696
+    m_Localized: Upgrade restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375697
+    m_Localized: Upgrade beach bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375698
+    m_Localized: Upgrade pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375699
+    m_Localized: Upgrade wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375700
+    m_Localized: Build hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375701
+    m_Localized: Build restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375702
+    m_Localized: Build beach bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375703
+    m_Localized: Build pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375704
+    m_Localized: Build wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375705
+    m_Localized: Instant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375706
+    m_Localized: "Waiting for time\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375707
+    m_Localized: Construction {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375708
+    m_Localized: "Waiting for an internet connection\u2026"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375709
+    m_Localized: Resort resources are unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375710
+    m_Localized: Not enough coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375711
+    m_Localized: Not enough energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375712
+    m_Localized: Not enough coins and energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375713
+    m_Localized: "Not enough coins \u2013 you need {0} more"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375714
+    m_Localized: "Not enough energy \u2013 you need {0} more"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375715
+    m_Localized: "Not enough gems \u2013 you need {0} more"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375716
+    m_Localized: "Not enough coins \u2013 you can pay with gems"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375717
+    m_Localized: "Not enough energy \u2013 you can pay with gems"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375718
+    m_Localized: "Not enough coins and energy \u2013 you can pay with gems"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375719
+    m_Localized: Not enough coins or gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375720
+    m_Localized: Not enough energy or gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375721
+    m_Localized: Not enough coins, energy or gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375722
+    m_Localized: VIP
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375723
+    m_Localized: VIP GUESTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375724
+    m_Localized: Invite one VIP guest to join the next wave. Offers refresh after the wave.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375725
+    m_Localized: '{0} will arrive with wave {1}. New offers will be available after this wave.'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375726
+    m_Localized: "Reward multiplier \xD7{0}"
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375727
+    m_Localized: INVITED
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375728
+    m_Localized: INVITE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375729
+    m_Localized: REQUIREMENTS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375730
+    m_Localized: INVITATION COST
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375731
+    m_Localized: RESORT VALUE
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375732
+    m_Localized: BUILDINGS
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375733
+    m_Localized: No requirements
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375734
+    m_Localized: Common
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375735
+    m_Localized: Rare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375736
+    m_Localized: Epic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375737
+    m_Localized: Legendary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375738
+    m_Localized: This VIP guest is no longer available
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375739
+    m_Localized: Already invited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375740
+    m_Localized: You can invite only one VIP guest at a time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375741
+    m_Localized: Requirements not met
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375742
+    m_Localized: 'Coins: {0} / {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569984
+    m_Localized: 'Resort value: {0} / {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569985
+    m_Localized: '{0}: {1} / {2}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569986
+    m_Localized: '{0} {1}'
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569987
+    m_Localized: Lv {0}
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569988
+    m_Localized: MAX
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569989
+    m_Localized: Travel vlogger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569990
+    m_Localized: Nature photographer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569991
+    m_Localized: Fitness influencer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569992
+    m_Localized: Food blogger
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569993
+    m_Localized: DJ and music producer
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569994
+    m_Localized: Bestselling author
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569995
+    m_Localized: Football star
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569996
+    m_Localized: Celebrity chef
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569997
+    m_Localized: Movie star
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569998
+    m_Localized: Pop star
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569999
+    m_Localized: She films videos from exotic destinations for half a million followers. A cosy hotel and a beautiful view are all she needs.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570000
+    m_Localized: He photographs sunsets and tropical wildlife for travel magazines. After a full day of photography, he enjoys a drink.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570001
+    m_Localized: Morning workouts, healthy smoothies and poolside stories. She won't come without a pool.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570002
+    m_Localized: He reviews restaurants around the world. His review can bring crowds of guests to the resort.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570003
+    m_Localized: He plays at the biggest beach parties. He wants a top-class bar and a pool for the after-party.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570004
+    m_Localized: She is coming to the island to finish her new book. She needs peace, wellness and a comfortable hotel.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570005
+    m_Localized: The national team captain is enjoying a holiday after the season. He expects a luxury hotel and the best pool.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570006
+    m_Localized: He owns award-winning restaurants and stars in cooking shows. He will inspect every kitchen and bar.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570007
+    m_Localized: A major film star looking for privacy and relaxation. She will accept only a luxury hotel with the best wellness facilities.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570008
+    m_Localized: The world's most famous singer. Her visit will make the resort famous, but everything must be perfect.
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570009
+    m_Localized: Language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570010
+    m_Localized: English
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570011
+    m_Localized: "Sloven\u010Dina"
+    m_Metadata:
+      m_Items: []
+  references:
+    version: 2
+    RefIds: []
