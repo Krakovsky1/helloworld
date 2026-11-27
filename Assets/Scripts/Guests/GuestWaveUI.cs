@@ -380,14 +380,24 @@ public class GuestWaveUI : MonoBehaviour
         if (drinkRewardText != null)
             GameTextView.Set(drinkRewardText, () => GameText.Get("reward_drink", rewardManager.DrinkCount));
 
+        string vipCoins = rewardManager.HasVipGuest
+            ? " <color=#55D995>(VIP +" + rewardManager.VipBonusCoins + ")</color>"
+            : "";
+        string vipEnergy = rewardManager.HasVipGuest
+            ? " <color=#55D995>(VIP +" + rewardManager.VipBonusEnergy + ")</color>"
+            : "";
+        string vipResort = rewardManager.HasVipGuest
+            ? " <color=#55D995>(VIP +" + rewardManager.VipBonusResortValue + ")</color>"
+            : "";
+
         if (totalCoinsText != null)
-            GameTextView.Set(totalCoinsText, () => GameText.Get("reward_coins", rewardManager.TotalCoins));
+            GameTextView.Set(totalCoinsText, () => GameText.Get("reward_coins", rewardManager.TotalCoins) + vipCoins);
 
         if (totalEnergyText != null)
-            GameTextView.Set(totalEnergyText, () => GameText.Get("reward_energy", rewardManager.TotalEnergy));
+            GameTextView.Set(totalEnergyText, () => GameText.Get("reward_energy", rewardManager.TotalEnergy) + vipEnergy);
 
         if (totalResortValueText != null)
-            GameTextView.Set(totalResortValueText, () => GameText.Get("reward_resort_value", rewardManager.TotalResortValue));
+            GameTextView.Set(totalResortValueText, () => GameText.Get("reward_resort_value", rewardManager.TotalResortValue) + vipResort);
 
         RefreshStarRatingSummary();
     }
@@ -422,7 +432,10 @@ public class GuestWaveUI : MonoBehaviour
                 guestServiceManager.TotalRatings, guestServiceManager.RatingsBelowFivePercentage.ToString("F1")) + "\n" +
             (rewardManager != null && rewardManager.RatingPenaltyApplied
                 ? "<color=#FF6B6B><b>" + GameText.Get("reward_penalty") + "</b></color>"
-                : "<color=#7CFF9B><b>" + GameText.Get("no_reward_penalty") + "</b></color>"));
+                : "<color=#7CFF9B><b>" + GameText.Get("no_reward_penalty") + "</b></color>") +
+            (rewardManager != null && rewardManager.HasVipGuest
+                ? "\n<color=#55D995><b>" + GameText.Get("vip_bonus_applied", rewardManager.VipRewardMultiplier.ToString("0.##")) + "</b></color>"
+                : ""));
     }
 
     public void ClaimRewards()

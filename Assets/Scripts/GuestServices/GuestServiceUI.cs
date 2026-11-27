@@ -5,23 +5,22 @@ using TMPro;
 
 public class GuestServiceUI : MonoBehaviour
 {
-    [Header("Mana��ri")]
+    [Header("Manažéri")]
     [SerializeField] private GuestServiceManager serviceManager;
     [SerializeField] private StaffManager staffManager;
 
-    [Header("UI - po�iadavky")]
+    [Header("UI")]
     [SerializeField] private Transform requestList;
     [SerializeField] private GameObject requestRowTemplate;
-
-    [Header("UI - zamestnanci")]
     [SerializeField] private TMP_Text staffCountText;
-    [SerializeField] private Button hireStaffButton;
-    [SerializeField] private TMP_Text hireStaffButtonText;
+    [SerializeField] private TMP_Text pendingRequestsCountText;
 
-    private readonly List<GameObject> createdRows =
-        new List<GameObject>();
+    [Header("VIP vzhľad")]
+    [SerializeField] private Color vipRowColor = new Color(0.24f, 0.18f, 0.08f, 1f);
+    [SerializeField] private Color vipTextColor = new Color(1f, 0.78f, 0.28f, 1f);
+    [SerializeField] private Color vipOutlineColor = new Color(1f, 0.68f, 0.16f, 1f);
 
-    private ResortResources subscribedResources;
+    private readonly List<GameObject> createdRows = new List<GameObject>();
 
     private void Awake()
     {
@@ -40,16 +39,6 @@ public class GuestServiceUI : MonoBehaviour
         if (staffManager != null)
             staffManager.OnStaffChanged += RefreshUI;
 
-        subscribedResources = ResortResources.Instance;
-        if (subscribedResources != null)
-            subscribedResources.Changed += RefreshUI;
-
-        if (hireStaffButton != null)
-        {
-            hireStaffButton.onClick.RemoveListener(HireStaff);
-            hireStaffButton.onClick.AddListener(HireStaff);
-        }
-
         RefreshUI();
     }
 
@@ -60,52 +49,34 @@ public class GuestServiceUI : MonoBehaviour
 
         if (staffManager != null)
             staffManager.OnStaffChanged -= RefreshUI;
-
-        if (subscribedResources != null)
-            subscribedResources.Changed -= RefreshUI;
-
-        if (hireStaffButton != null)
-            hireStaffButton.onClick.RemoveListener(HireStaff);
     }
 
     private void RefreshUI()
     {
-        RefreshStaffUI();
+        RefreshStaffCount();
         RefreshRequestList();
+        RefreshPendingRequestsCount();
     }
 
-    private void RefreshStaffUI()
+    private void RefreshPendingRequestsCount()
     {
-        if (staffManager == null)
+        if (pendingRequestsCountText == null || serviceManager == null)
             return;
 
-        if (staffCountText != null)
-        {
-            GameTextBinding.Set(staffCountText, "staff_count",
-                staffManager.AvailableStaff, staffManager.TotalStaff);
-        }
-
-        if (hireStaffButtonText != null)
-            GameTextBinding.Set(hireStaffButtonText, "hire_staff_cost", staffManager.HireCost);
-
-        if (hireStaffButton != null)
-            hireStaffButton.interactable = staffManager.CanHireStaff;
+        GameTextBinding.Set(pendingRequestsCountText, "pending_requests_count", serviceManager.PendingRequestCount);
     }
 
-    private void HireStaff()
+    private void RefreshStaffCount()
     {
-        if (staffManager == null)
+        if (staffCountText == null || staffManager == null)
             return;
 
-        staffManager.TryHireStaff();
-        RefreshStaffUI();
+        GameTextBinding.Set(staffCountText, "staff_count", staffManager.AvailableStaff, staffManager.TotalStaff);
     }
 
     private void RefreshRequestList()
     {
-        if (requestList == null ||
-            requestRowTemplate == null ||
-            serviceManager == null)
+        if (requestList == null || requestRowTemplate == null || serviceManager == null)
             return;
 
         foreach (GameObject row in createdRows)
@@ -113,37 +84,30 @@ public class GuestServiceUI : MonoBehaviour
             if (row != null)
                 Destroy(row);
         }
-
         createdRows.Clear();
 
-        foreach (GuestServiceManager.ServiceRequest request
-                 in serviceManager.ActiveRequests)
+        foreach (GuestServiceManager.ServiceRequest request in serviceManager.ActiveRequests)
         {
-            if (request == null)
-                continue;
-
-            CreateRequestRow(request);
+            if (request != null)
+                CreateRequestRow(request);
         }
     }
 
-    private void CreateRequestRow(
-        GuestServiceManager.ServiceRequest request)
+    private void CreateRequestRow(GuestServiceManager.ServiceRequest request)
     {
         GameObject row = Instantiate(requestRowTemplate, requestList);
-        row.name = "Request_" + request.Type;
+        row.name = (IsVipRequest(request) ? "VIP_Request_" : "Request_") + request.Type;
         row.SetActive(true);
         createdRows.Add(row);
 
         TMP_Text requestText = null;
         TMP_Text buttonText = null;
 
-        foreach (TMP_Text text in
-                 row.GetComponentsInChildren<TMP_Text>(true))
+        foreach (TMP_Text text in row.GetComponentsInChildren<TMP_Text>(true))
         {
             if (text.name == "RequestText")
                 requestText = text;
-
-            if (text.name == "Text (TMP)")
+            else if (text.name == "Text (TMP)")
                 buttonText = text;
         }
 
@@ -151,48 +115,101 @@ public class GuestServiceUI : MonoBehaviour
 
         if (requestText == null || assignButton == null)
         {
-            Debug.LogError(
-                "GuestServiceUI: V RequestRowTemplate ch�ba " +
-                "RequestText alebo AssignButton."
-            );
+            Debug.LogError("GuestServiceUI: V RequestRowTemplate chýba RequestText alebo AssignButton.");
             return;
         }
 
-        GameTextBinding.Set(requestText, GetServiceKey(request.Type));
-            
+        VipGuestMarker vipMarker = GetVipMarker(request);
+        bool isVip = vipMarker != null;
 
-        assignButton.onClick.RemoveAllListeners();
+        if (isVip)
+        {
+            // VIP riadok zobrazuje iba označenie VIP – meno ani požiadavku nezobrazujeme.
+            requestText.text = "<b>★ VIP</b>";
+            requestText.color = vipTextColor;
+            ApplyVipRowStyle(row);
+        }
+        else
+        {
+            GameTextBinding.Set(requestText, GetServiceKey(request.Type));
+            requestText.color = Color.white;
+        }
 
         if (request.IsAssigned)
         {
             assignButton.interactable = false;
-
             if (buttonText != null)
                 GameTextBinding.Set(buttonText, "serving");
         }
         else
         {
-            assignButton.interactable =
-                staffManager != null &&
-                staffManager.AvailableStaff > 0;
-
+            assignButton.interactable = staffManager != null && staffManager.AvailableStaff >= request.StaffRequired;
             if (buttonText != null)
                 GameTextBinding.Set(buttonText, "assign");
 
+            assignButton.onClick.RemoveAllListeners();
             assignButton.onClick.AddListener(() =>
             {
                 bool assigned = serviceManager.AssignRequest(request);
-
                 if (!assigned)
-                    Debug.Log("Po�iadavku sa nepodarilo priradi�.");
+                    Debug.Log("Požiadavku sa nepodarilo priradiť.");
             });
         }
     }
 
-    private Button FindAssignButton(Transform row)
+    private bool IsVipRequest(GuestServiceManager.ServiceRequest request)
     {
-        foreach (Transform child in
-                 row.GetComponentsInChildren<Transform>(true))
+        return GetVipMarker(request) != null;
+    }
+
+    private VipGuestMarker GetVipMarker(GuestServiceManager.ServiceRequest request)
+    {
+        if (request == null || request.Guest == null)
+            return null;
+
+        VipGuestMarker marker = request.Guest.GetComponent<VipGuestMarker>();
+        if (marker == null)
+            marker = request.Guest.GetComponentInParent<VipGuestMarker>();
+        if (marker == null)
+            marker = request.Guest.GetComponentInChildren<VipGuestMarker>(true);
+
+        return marker;
+    }
+
+    private void ApplyVipRowStyle(GameObject row)
+    {
+        // Uprednostníme Image priamo na riadku, aby sme omylom nezafarbili tlačidlo ASSIGN.
+        Image background = row.GetComponent<Image>();
+
+        if (background != null)
+        {
+            background.color = vipRowColor;
+
+            // Outline musí byť na rovnakom GameObjecte ako Image/Graphic.
+            Outline outline = background.GetComponent<Outline>();
+            if (outline == null)
+                outline = background.gameObject.AddComponent<Outline>();
+
+            outline.effectColor = vipOutlineColor;
+            outline.effectDistance = new Vector2(3f, 3f);
+            outline.useGraphicAlpha = true;
+        }
+        else
+        {
+            // Ak template nemá Image na koreni, zvýrazníme aspoň samotný text.
+            Outline outline = row.GetComponent<Outline>();
+            if (outline == null)
+                outline = row.AddComponent<Outline>();
+
+            outline.effectColor = vipOutlineColor;
+            outline.effectDistance = new Vector2(2f, 2f);
+            outline.useGraphicAlpha = true;
+        }
+    }
+
+    private Button FindAssignButton(Transform root)
+    {
+        foreach (Transform child in root.GetComponentsInChildren<Transform>(true))
         {
             if (child.name == "AssignButton")
                 return child.GetComponent<Button>();

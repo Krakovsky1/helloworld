@@ -9,6 +9,9 @@ public class GuestServiceManager : MonoBehaviour
     [Header("Nastavenie obsluhy")]
     [SerializeField] private float serviceDuration = 15f;
 
+    [Header("Obmedzenie poziadaviek")]
+    [SerializeField, Range(1, 20)] private int maxActiveRequests = 7;
+
     [Header("Manaér zamestnancov")]
     [SerializeField] private StaffManager staffManager;
 
@@ -19,6 +22,7 @@ public class GuestServiceManager : MonoBehaviour
         public float CreatedAt { get; private set; }
         public int Stars { get; set; }
         public bool IsAssigned { get; set; }
+        public int StaffRequired { get; private set; }
         public float ServiceEndsAt { get; set; }   // FR-39: kedy obsluha skončí (Time.time)
 
         public GuestNeedType Type => Need.Type;
@@ -33,11 +37,32 @@ public class GuestServiceManager : MonoBehaviour
             CreatedAt = need.CreatedAt;
             IsAssigned = false;
             Stars = 0;
+            StaffRequired = IsVipGuest(guest) ? 2 : 1;
         }
     }
 
     private readonly List<ServiceRequest> activeRequests =
         new List<ServiceRequest>();
+
+    // Dalsie poziadavky cakaju, kym sa uvolni miesto v zozname.
+    private readonly Queue<ServiceRequest> pendingRequests =
+        new Queue<ServiceRequest>();
+
+    private struct PendingAssignment
+    {
+        public int Stars;
+        public float Remaining;
+
+        public PendingAssignment(int stars, float remaining)
+        {
+            Stars = stars;
+            Remaining = remaining;
+        }
+    }
+
+    // Obnovy priradenych poziadaviek, ktore pri nacitani cakaju vo fronte.
+    private readonly Dictionary<ServiceRequest, PendingAssignment> pendingAssignments =
+        new Dictionary<ServiceRequest, PendingAssignment>();
 
     // Per-wave counts for ratings from 1 to 5 stars.
     private readonly int[] ratingCounts = new int[6];
@@ -49,6 +74,7 @@ public class GuestServiceManager : MonoBehaviour
         new Dictionary<GuestNeeds, Action<GuestNeed>>();
 
     public IReadOnlyList<ServiceRequest> ActiveRequests => activeRequests;
+    public int PendingRequestCount => pendingRequests.Count;
 
     public int GetRatingCount(int stars)
     {
@@ -103,11 +129,32 @@ public class GuestServiceManager : MonoBehaviour
 
     private void Awake()
     {
+        maxActiveRequests = Mathf.Max(1, maxActiveRequests);
+
         if (staffManager == null)
             staffManager = FindAnyObjectByType<StaffManager>();
 
         if (staffManager == null)
             Debug.LogError("GuestServiceManager: StaffManager sa nenaiel.");
+
+        if (staffManager != null)
+            staffManager.OnStaffChanged += HandleStaffChanged;
+    }
+
+    private int CountUnassignedActiveRequests()
+    {
+        int count = 0;
+        foreach (ServiceRequest request in activeRequests)
+        {
+            if (request != null && !request.IsAssigned)
+                count++;
+        }
+        return count;
+    }
+
+    private void HandleStaffChanged()
+    {
+        PromotePendingRequests();
     }
 
     public void RegisterGuest(GuestNeeds guest)
@@ -150,23 +197,128 @@ public class GuestServiceManager : MonoBehaviour
         if (guest == null || need == null || need.IsCompleted)
             return;
 
-        // Izby riei existujúci hotelový systém.
+        // Izby riesi existujuci hotelovy system.
         if (need.Type == GuestNeedType.Room)
             return;
 
+        // Zabranime duplicitnemu vlozeniu do aktivneho zoznamu aj frontu.
         foreach (ServiceRequest existing in activeRequests)
         {
             if (existing.Need == need)
                 return;
         }
 
+        foreach (ServiceRequest existing in pendingRequests)
+        {
+            if (existing.Need == need)
+                return;
+        }
+
         ServiceRequest request = new ServiceRequest(guest, need);
-        activeRequests.Add(request);
 
-        Debug.Log("Nová poiadavka: " + need.Type +
-                  " od hosa " + guest.gameObject.name);
+        if (CountUnassignedActiveRequests() < Mathf.Max(1, maxActiveRequests))
+        {
+            activeRequests.Add(request);
+            Debug.Log("Nova poziadavka: " + need.Type +
+                      " od hosta " + guest.gameObject.name);
+        }
+        else
+        {
+            pendingRequests.Enqueue(request);
+            Debug.Log("Front poziadaviek je plny. Poziadavka " +
+                      need.Type + " od hosta " + guest.gameObject.name +
+                      " caka vo fronte.");
+        }
 
+        PromotePendingRequests();
         OnRequestsChanged?.Invoke();
+    }
+
+    // Najprv udrziava standardny zoznam do maxActiveRequests.
+    // Ak je cely tento zoznam uz priradeny a stale mame volny personal,
+    // zobrazi dalsie poziadavky - najviac tolko, kolko mame volnych zamestnancov.
+    private void PromotePendingRequests()
+    {
+        bool changed = false;
+        int limit = Mathf.Max(1, maxActiveRequests);
+
+        // Standardne doplnenie zoznamu do 7 poziadaviek.
+        while (activeRequests.Count < limit && pendingRequests.Count > 0)
+        {
+            ServiceRequest next = pendingRequests.Dequeue();
+
+            if (next == null || next.Guest == null ||
+                next.Need == null || next.Need.IsCompleted)
+                continue;
+
+            activeRequests.Add(next);
+            changed = true;
+
+            if (pendingAssignments.TryGetValue(next, out PendingAssignment saved))
+            {
+                pendingAssignments.Remove(next);
+                StartRestoredAssignment(next, saved.Stars, saved.Remaining);
+            }
+        }
+
+        // Ak je uz kazda zobrazena poziadavka priradena, volny personal
+        // nesmie stat. Ukaz dalsie poziadavky podla poctu volnych zamestnancov.
+        bool allVisibleRequestsAssigned = activeRequests.Count >= limit;
+        if (allVisibleRequestsAssigned)
+        {
+            foreach (ServiceRequest request in activeRequests)
+            {
+                if (request != null && !request.IsAssigned)
+                {
+                    allVisibleRequestsAssigned = false;
+                    break;
+                }
+            }
+        }
+
+        if (allVisibleRequestsAssigned && staffManager != null)
+        {
+            int extraSlots = staffManager.AvailableStaff;
+
+            while (extraSlots > 0 && pendingRequests.Count > 0)
+            {
+                ServiceRequest next = pendingRequests.Peek();
+
+                if (next == null || next.Guest == null ||
+                    next.Need == null || next.Need.IsCompleted)
+                {
+                    pendingRequests.Dequeue();
+                    continue;
+                }
+
+                // VIP poziadavka spotrebuje dvoch volnych zamestnancov.
+                if (next.StaffRequired > extraSlots)
+                    break;
+
+                pendingRequests.Dequeue();
+                activeRequests.Add(next);
+                extraSlots -= next.StaffRequired;
+                changed = true;
+
+                if (pendingAssignments.TryGetValue(next, out PendingAssignment saved))
+                {
+                    pendingAssignments.Remove(next);
+                    StartRestoredAssignment(next, saved.Stars, saved.Remaining);
+                }
+            }
+        }
+
+        if (changed)
+            OnRequestsChanged?.Invoke();
+    }
+
+    private static bool IsVipGuest(GuestNeeds guest)
+    {
+        if (guest == null) return false;
+
+        return guest.GetComponent<VipGuestMarker>() != null ||
+               guest.GetComponentInParent<VipGuestMarker>() != null ||
+               guest.GetComponentInChildren<VipGuestMarker>(true) != null;
     }
 
     public bool AssignRequest(ServiceRequest request)
@@ -183,7 +335,7 @@ public class GuestServiceManager : MonoBehaviour
             return false;
         }
 
-        if (!staffManager.TryAssignStaff())
+        if (!staffManager.TryAssignStaff(request.StaffRequired))
             return false;
 
         float responseTime = Time.time - request.CreatedAt;
@@ -203,6 +355,7 @@ public class GuestServiceManager : MonoBehaviour
         Coroutine routine = StartCoroutine(CompleteService(request, serviceDuration));
         runningServices.Add(request, routine);
 
+        PromotePendingRequests();
         OnRequestsChanged?.Invoke();
 
         return true;
@@ -231,6 +384,7 @@ public class GuestServiceManager : MonoBehaviour
     public bool RestoreAssignment(GuestNeed need, int stars, float remaining)
     {
         ServiceRequest request = null;
+
         foreach (ServiceRequest r in activeRequests)
         {
             if (r.Need == need)
@@ -240,14 +394,47 @@ public class GuestServiceManager : MonoBehaviour
             }
         }
 
-        if (request == null || request.IsAssigned)
+        if (request != null)
+        {
+            if (request.IsAssigned)
+                return false;
+
+            return StartRestoredAssignment(request, stars, remaining);
+        }
+
+        // Poziadavka moze byt po nacitani este vo fronte za prvymi 7.
+        foreach (ServiceRequest r in pendingRequests)
+        {
+            if (r.Need == need)
+            {
+                request = r;
+                break;
+            }
+        }
+
+        if (request == null)
             return false;
 
-        if (staffManager == null || !staffManager.TryAssignStaff())
+        pendingAssignments[request] =
+            new PendingAssignment(Mathf.Clamp(stars, 1, 5), Mathf.Max(0.1f, remaining));
+
+        return true;
+    }
+
+    private bool StartRestoredAssignment(ServiceRequest request, int stars, float remaining)
+    {
+        if (request == null || request.IsAssigned || staffManager == null)
             return false;
+
+        if (!staffManager.TryAssignStaff(request.StaffRequired))
+        {
+            Debug.LogWarning("GuestServiceManager: Po obnoveni nie je dost volnych zamestnancov pre poziadavku.");
+            return false;
+        }
 
         request.IsAssigned = true;
         request.Stars = Mathf.Clamp(stars, 1, 5);
+
         float duration = Mathf.Max(0.1f, remaining);
         request.ServiceEndsAt = Time.time + duration;
 
@@ -278,11 +465,12 @@ public class GuestServiceManager : MonoBehaviour
         runningServices.Remove(request);
 
         if (staffManager != null)
-            staffManager.ReleaseStaff();
+            staffManager.ReleaseStaff(request.StaffRequired);
 
-        Debug.Log("Sluba " + request.Type +
-                  " dokonèená. Zamestnanec je opä dostupný.");
+        Debug.Log("Sluzba " + request.Type + " dokoncena. Uvolneni zamestnanci: " + request.StaffRequired + ".");
 
+        // Uvolnilo sa miesto: zobrazime dalsiu cakajucu poziadavku.
+        PromotePendingRequests();
         OnRequestsChanged?.Invoke();
     }
 
@@ -312,5 +500,8 @@ public class GuestServiceManager : MonoBehaviour
 
         guestHandlers.Clear();
         runningServices.Clear();
+
+        if (staffManager != null)
+            staffManager.OnStaffChanged -= HandleStaffChanged;
     }
 }

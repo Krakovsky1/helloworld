@@ -1,21 +1,33 @@
-using System;
+ï»¿using System;
 using UnityEngine;
 
 public class StaffManager : MonoBehaviour
 {
     [Header("Nastavenie zamestnancov")]
-    [SerializeField] private int startingStaff = 6;
-    [SerializeField] private int maxStaff = 20;
-    [SerializeField] private int hireCost = 120;
+    [SerializeField, Min(1)] private int startingStaff = 6;
+    [SerializeField, Min(1)] private int maxStaff = 20;
+
+    [Header("Cena najimania")]
+    [SerializeField, Min(0)] private int firstHireCost = 120;
+    [SerializeField, Min(0)] private int hireCostIncrease = 20;
 
     private int totalStaff;
     private int availableStaff;
 
     public int TotalStaff => totalStaff;
     public int AvailableStaff => availableStaff;
-    public int AssignedStaff => totalStaff - availableStaff;
-    public int HireCost => hireCost;
+    public int AssignedStaff => Mathf.Max(0, totalStaff - availableStaff);
     public int MaxStaff => maxStaff;
+
+    // Prvy dokupeny zamestnanec stoji 120, dalsi 140, potom 160 atd.
+    public int HireCost
+    {
+        get
+        {
+            int hiredSinceStart = Mathf.Max(0, totalStaff - startingStaff);
+            return firstHireCost + hiredSinceStart * hireCostIncrease;
+        }
+    }
 
     public bool CanHireStaff
     {
@@ -24,7 +36,7 @@ public class StaffManager : MonoBehaviour
             ResortResources resources = ResortResources.Instance;
             return totalStaff < maxStaff &&
                    resources != null &&
-                   resources.Coins >= hireCost;
+                   resources.Coins >= HireCost;
         }
     }
 
@@ -33,88 +45,126 @@ public class StaffManager : MonoBehaviour
     private void Awake()
     {
         maxStaff = Mathf.Max(1, maxStaff);
-        startingStaff = Mathf.Clamp(startingStaff, 0, maxStaff);
-        hireCost = Mathf.Max(0, hireCost);
+        startingStaff = Mathf.Clamp(startingStaff, 1, maxStaff);
+        firstHireCost = Mathf.Max(0, firstHireCost);
+        hireCostIncrease = Mathf.Max(0, hireCostIncrease);
 
         totalStaff = startingStaff;
         availableStaff = totalStaff;
 
+        Debug.Log("StaffManager inicializovany: " + availableStaff + "/" + totalStaff +
+                  ". Cena prveho dokupeneho zamestnanca: " + HireCost + " coins.");
+
         NotifyChanged();
+    }
+
+    // Unity UI Button OnClick() entry point.
+    // Button invokes void methods; the actual purchase logic stays in TryHireStaff().
+    public void HireStaffFromButton()
+    {
+        TryHireStaff();
     }
 
     public bool TryHireStaff()
     {
         if (totalStaff >= maxStaff)
         {
-            Debug.Log("Dosiahol si maximálny poèet zamestnancov.");
+            Debug.LogWarning("StaffManager: Dosiahol si maximalny pocet zamestnancov (" + maxStaff + ").");
             return false;
         }
 
         ResortResources resources = ResortResources.Instance;
-
         if (resources == null)
         {
-            Debug.LogError("StaffManager: ResortResources sa nenašiel.");
+            Debug.LogError("StaffManager: ResortResources.Instance je null. Skontroluj objekt ResortResources v scene.");
             return false;
         }
 
-        if (!resources.TrySpend(hireCost, 0))
+        int price = HireCost;
+
+        if (!resources.TrySpend(price, 0))
         {
-            Debug.Log("Nemáš dostatok mincí na nákup zamestnanca.");
+            Debug.LogWarning("StaffManager: Nedostatok coins. Potrebujes " +
+                             price + ", aktualne mas " + resources.Coins + ".");
             return false;
         }
 
         totalStaff++;
         availableStaff++;
 
-        Debug.Log("Zamestnanec bol najatý. Dostupní: " +
-                  availableStaff + "/" + totalStaff);
+        Debug.Log("StaffManager: Najaty zamestnanec za " + price +
+                  " coins. Stav: " + availableStaff + "/" + totalStaff +
+                  ". Dalsi bude stat " + HireCost + " coins.");
 
         NotifyChanged();
+        SaveManager.RequestSave();
         return true;
     }
 
+    // Bezna poziadavka potrebuje jedneho zamestnanca.
     public bool TryAssignStaff()
     {
-        if (availableStaff <= 0)
+        return TryAssignStaff(1);
+    }
+
+    // VIP poziadavka moze potrebovat dvoch zamestnancov.
+    public bool TryAssignStaff(int count)
+    {
+        if (count <= 0)
         {
-            Debug.Log("Nemáš žiadneho vo¾ného zamestnanca.");
+            Debug.LogWarning("StaffManager: Pocet priradovanych zamestnancov musi byt vacsi ako 0.");
             return false;
         }
 
-        availableStaff--;
+        if (availableStaff < count)
+        {
+            Debug.Log("StaffManager: Nedostatok volnych zamestnancov. Potrebnych: " +
+                      count + ", dostupnych: " + availableStaff + ".");
+            return false;
+        }
 
-        Debug.Log("Zamestnanec bol priradený. Dostupní: " +
-                  availableStaff + "/" + totalStaff);
-
+        availableStaff -= count;
         NotifyChanged();
         return true;
     }
 
     public void ReleaseStaff()
     {
-        if (availableStaff >= totalStaff)
+        ReleaseStaff(1);
+    }
+
+    public void ReleaseStaff(int count)
+    {
+        if (count <= 0)
         {
-            Debug.LogWarning("Všetci zamestnanci sú už vo¾ní.");
+            Debug.LogWarning("StaffManager: Pocet uvolnovanych zamestnancov musi byt vacsi ako 0.");
             return;
         }
 
-        availableStaff++;
+        int assigned = totalStaff - availableStaff;
+        int releaseCount = Mathf.Min(count, assigned);
 
-        Debug.Log("Zamestnanec je opä dostupný. Dostupní: " +
-                  availableStaff + "/" + totalStaff);
+        if (releaseCount <= 0)
+        {
+            Debug.LogWarning("StaffManager: Nie su ziadni priradeni zamestnanci na uvolnenie.");
+            return;
+        }
 
+        availableStaff += releaseCount;
         NotifyChanged();
     }
 
-    // FR-39: obnova z ulozenej hry - pocet najatych zamestnancov (vsetci su po nacitani volni).
+    // FR-39: obnova personÃ¡lu zo save. Nula v starom/neuplnom save
+    // povazujeme za chybajuci udaj, nie za skutocny pocet zamestnancov.
     public void RestoreStaff(int savedTotal)
     {
-        if (savedTotal < 0)
-            return;
-
-        totalStaff = Mathf.Clamp(savedTotal, 0, maxStaff);
+        int restoredTotal = savedTotal <= 0 ? startingStaff : savedTotal;
+        totalStaff = Mathf.Clamp(restoredTotal, startingStaff, maxStaff);
         availableStaff = totalStaff;
+
+        Debug.Log("StaffManager: Obnoveny personal zo save: " +
+                  availableStaff + "/" + totalStaff + ".");
+
         NotifyChanged();
     }
 
