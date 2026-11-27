@@ -415,8 +415,8 @@ public abstract class BuildSpot : MonoBehaviour
             // FR-29: počas stavby ikonka budovy a odpočet pod ňou
             iconImage.sprite = builtSprite != null ? builtSprite : plusSprite;
             string text = construction.WaitingForServer
-                ? "Čaká na čas…"
-                : "Stavba " + BuildTimers.FormatCountdown(construction.Remaining);
+                ? GameText.Get("waiting_for_time")
+                : GameText.Get("construction_countdown", BuildTimers.FormatCountdown(construction.Remaining));
             if (text != shownLabel)
             {
                 shownLabel = text;

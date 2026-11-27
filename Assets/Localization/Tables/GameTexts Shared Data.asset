@@ -1,0 +1,748 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5b11a58205ec3474ca216360e9fa74a8, type: 3}
+  m_Name: GameTexts Shared Data
+  m_EditorClassIdentifier: Unity.Localization::UnityEngine.Localization.Tables.SharedTableData
+  m_TableCollectionName: GameTexts
+  m_TableCollectionNameGuidString: 59d55f452211f734a869e43a77bdff31
+  m_Entries:
+  - m_Id: 2041501712384
+    m_Key: start_wave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041581404160
+    m_Key: no_active_wave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041585598464
+    m_Key: service_capacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041585598465
+    m_Key: services
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792768
+    m_Key: drinks
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792769
+    m_Key: food
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792770
+    m_Key: service_initial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792771
+    m_Key: drink_initial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041589792772
+    m_Key: food_initial
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987072
+    m_Key: resort_title
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987073
+    m_Key: guest_arrival
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987074
+    m_Key: accept_all
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987075
+    m_Key: reject_all
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987076
+    m_Key: claim
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987077
+    m_Key: wave_reward
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987078
+    m_Key: guest_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987079
+    m_Key: guest_name
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987080
+    m_Key: unknown_guest
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987081
+    m_Key: next_wave_in
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987082
+    m_Key: no_needs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987083
+    m_Key: no_active_needs
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987084
+    m_Key: need_room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987085
+    m_Key: need_drink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987086
+    m_Key: need_food
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987087
+    m_Key: need_relax
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987088
+    m_Key: reward_room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987089
+    m_Key: reward_relax
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987090
+    m_Key: reward_food
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987091
+    m_Key: reward_drink
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987092
+    m_Key: reward_coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987093
+    m_Key: reward_energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987094
+    m_Key: reward_resort_value
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987095
+    m_Key: wave_summary_no_rating
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987096
+    m_Key: guest_rating
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987097
+    m_Key: rating_5
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987098
+    m_Key: rating_4
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987099
+    m_Key: rating_3
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987100
+    m_Key: rating_2
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987101
+    m_Key: rating_1
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987102
+    m_Key: rating_total
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987103
+    m_Key: rating_below_five
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987104
+    m_Key: reward_penalty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987105
+    m_Key: no_reward_penalty
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987106
+    m_Key: staff_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987107
+    m_Key: hire_staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987108
+    m_Key: hire_staff_cost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987109
+    m_Key: hire_staff_hud
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987110
+    m_Key: max_staff
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987111
+    m_Key: assign
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987112
+    m_Key: serving
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987113
+    m_Key: request_restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987114
+    m_Key: request_bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987115
+    m_Key: request_relax
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987116
+    m_Key: request_room
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987117
+    m_Key: reception
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987118
+    m_Key: beach_bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987119
+    m_Key: restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987120
+    m_Key: pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987121
+    m_Key: bungalows
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987122
+    m_Key: hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987123
+    m_Key: wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987124
+    m_Key: reception_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987125
+    m_Key: bar_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987126
+    m_Key: restaurant_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987127
+    m_Key: pool_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987128
+    m_Key: bungalows_full
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987129
+    m_Key: reception_free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987130
+    m_Key: bar_free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987131
+    m_Key: restaurant_free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987132
+    m_Key: pool_free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987133
+    m_Key: bungalows_free
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987134
+    m_Key: reception_overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987135
+    m_Key: bar_overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987136
+    m_Key: restaurant_overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987137
+    m_Key: pool_overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987138
+    m_Key: bungalows_overloaded
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987139
+    m_Key: waiting_queue
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987140
+    m_Key: free_capacity
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987141
+    m_Key: coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987142
+    m_Key: gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987143
+    m_Key: energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987144
+    m_Key: resort_value
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987145
+    m_Key: upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987146
+    m_Key: build
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987147
+    m_Key: close
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987148
+    m_Key: finish
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041593987149
+    m_Key: for_cost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375680
+    m_Key: now
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375681
+    m_Key: after_build
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375682
+    m_Key: after_upgrade
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375683
+    m_Key: build_cost_time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375684
+    m_Key: upgrade_cost_time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375685
+    m_Key: upgrade_cost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375686
+    m_Key: not_built
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375687
+    m_Key: level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375688
+    m_Key: level_progress
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375689
+    m_Key: max_level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375690
+    m_Key: building_max_level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375691
+    m_Key: build_new_level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375692
+    m_Key: upgrade_to_level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375693
+    m_Key: new_building_max
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375694
+    m_Key: upgrade_hotel_first
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375695
+    m_Key: upgrade_hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375696
+    m_Key: upgrade_restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375697
+    m_Key: upgrade_bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375698
+    m_Key: upgrade_pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375699
+    m_Key: upgrade_wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375700
+    m_Key: build_hotel
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375701
+    m_Key: build_restaurant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375702
+    m_Key: build_bar
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375703
+    m_Key: build_pool
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375704
+    m_Key: build_wellness
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375705
+    m_Key: instant
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375706
+    m_Key: waiting_for_time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375707
+    m_Key: construction_countdown
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375708
+    m_Key: waiting_for_internet
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375709
+    m_Key: resources_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375710
+    m_Key: missing_coins
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375711
+    m_Key: missing_energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375712
+    m_Key: missing_coins_energy
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375713
+    m_Key: missing_coins_amount
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375714
+    m_Key: missing_energy_amount
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375715
+    m_Key: missing_gems_amount
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375716
+    m_Key: missing_coins_pay_gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375717
+    m_Key: missing_energy_pay_gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375718
+    m_Key: missing_both_pay_gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375719
+    m_Key: missing_coins_and_gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375720
+    m_Key: missing_energy_and_gems
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375721
+    m_Key: missing_all_resources
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375722
+    m_Key: vip
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375723
+    m_Key: vip_guests
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375724
+    m_Key: vip_invitation_intro
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375725
+    m_Key: vip_invited_wave
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375726
+    m_Key: vip_reward_multiplier
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375727
+    m_Key: vip_invited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375728
+    m_Key: vip_invite
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375729
+    m_Key: vip_conditions
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375730
+    m_Key: vip_invite_cost
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375731
+    m_Key: vip_resort_value
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375732
+    m_Key: vip_buildings
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375733
+    m_Key: vip_no_requirements
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375734
+    m_Key: vip_rarity_common
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375735
+    m_Key: vip_rarity_rare
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375736
+    m_Key: vip_rarity_epic
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375737
+    m_Key: vip_rarity_legendary
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375738
+    m_Key: vip_unavailable
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375739
+    m_Key: vip_already_invited
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375740
+    m_Key: vip_one_at_a_time
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375741
+    m_Key: vip_requirements_not_met
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041602375742
+    m_Key: vip_coins_required
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569984
+    m_Key: vip_value_required
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569985
+    m_Key: vip_building_required
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569986
+    m_Key: vip_building_level
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569987
+    m_Key: vip_level_short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569988
+    m_Key: max_short
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569989
+    m_Key: vip_travel_vlogger_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569990
+    m_Key: vip_nature_photographer_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569991
+    m_Key: vip_fitness_influencer_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569992
+    m_Key: vip_food_blogger_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569993
+    m_Key: vip_dj_nova_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569994
+    m_Key: vip_bestseller_writer_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569995
+    m_Key: vip_football_star_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569996
+    m_Key: vip_celebrity_chef_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569997
+    m_Key: vip_movie_star_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569998
+    m_Key: vip_pop_star_profession
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606569999
+    m_Key: vip_travel_vlogger_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570000
+    m_Key: vip_nature_photographer_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570001
+    m_Key: vip_fitness_influencer_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570002
+    m_Key: vip_food_blogger_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570003
+    m_Key: vip_dj_nova_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570004
+    m_Key: vip_bestseller_writer_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570005
+    m_Key: vip_football_star_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570006
+    m_Key: vip_celebrity_chef_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570007
+    m_Key: vip_movie_star_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570008
+    m_Key: vip_pop_star_description
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570009
+    m_Key: language
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570010
+    m_Key: language_en
+    m_Metadata:
+      m_Items: []
+  - m_Id: 2041606570011
+    m_Key: language_sk
+    m_Metadata:
+      m_Items: []
+  - m_Id: 368412613935104
+    m_Key: pending_requests_count
+    m_Metadata:
+      m_Items: []
+  - m_Id: 368723537690624
+    m_Key: vip_bonus_applied
+    m_Metadata:
+      m_Items: []
+  m_Metadata:
+    m_Items: []
+  m_KeyGenerator:
+    rid: 6629139826593497320
+  references:
+    version: 2
+    RefIds:
+    - rid: 6629139826593497320
+      type: {class: DistributedUIDGenerator, ns: UnityEngine.Localization.Tables, asm: Unity.Localization}
+      data:
+        m_CustomEpoch: 1795710703865

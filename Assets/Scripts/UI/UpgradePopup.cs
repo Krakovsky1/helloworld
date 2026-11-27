@@ -90,6 +90,7 @@ public class UpgradePopup : MonoBehaviour
     Text countdown;
     RectTransform progressFill;
     int shownSpeedUpCost = -1;
+    int languageRevision = -1;
 
     // Fialové tlačidlo s drahokamom: [prefix] [ikonka] [číslo]
     class GemButton
@@ -144,13 +145,16 @@ public class UpgradePopup : MonoBehaviour
         bool isMax = data.IsMax;
         bool isBuilding = data.IsBuilding;
         bool offer = !isMax && !isBuilding;
-        title.text = isMax || isBuilding ? data.nameNominative : (data.isNew ? "Postaviť " : "Vylepšiť ") + data.nameAccusative;
+        GameTextView.Set(title, () =>
+        {
+            string key = GameText.BuildingKey(data.nameNominative);
+            if (isMax || isBuilding) return GameText.BuildingName(data.nameNominative);
+            return key != null ? GameText.Get((data.isNew ? "build_" : "upgrade_") + key) : data.nameNominative;
+        });
         if (isBuilding)
-            subtitle.text = data.isNew ? "Stavba – Level 1" : "Vylepšenie na Level " + data.construction.targetLevel;
+            GameTextView.Set(subtitle, () => data.isNew ? GameText.Get("build_new_level") : GameText.Get("upgrade_to_level", data.construction.targetLevel));
         else
-            subtitle.text = data.isNew
-                ? "Nová budova – najviac Level " + data.maxLevel
-                : "Úroveň " + data.level + " z " + data.maxLevel;
+            GameTextView.Set(subtitle, () => data.isNew ? GameText.Get("new_building_max", data.maxLevel) : GameText.Get("level_progress", data.level, data.maxLevel));
 
         levelsGroup.SetActive(offer);
         costLabel.gameObject.SetActive(offer);
@@ -166,7 +170,7 @@ public class UpgradePopup : MonoBehaviour
 
         if (isMax)
         {
-            maxMessage.text = data.nameNominative + " je na najvyššej úrovni.";
+            GameTextView.Set(maxMessage, () => GameText.Get("building_max_level", GameText.BuildingName(data.nameNominative)));
             note.gameObject.SetActive(false);
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeightMax);
             closeRect.anchoredPosition = new Vector2(0f, -310f);
@@ -177,7 +181,7 @@ public class UpgradePopup : MonoBehaviour
             // Odpočet stavby: [DOKONČIŤ drahokam N] [ZAVRIEŤ]
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeightBuilding);
             SetNoteY(NoteYBuilding);
-            gemButton.prefix.text = "DOKONČIŤ";
+            GameTextView.Set(gemButton.prefix, () => GameText.Get("finish"));
             gemButton.rect.anchoredPosition = new Vector2(-145f, ButtonYBuilding);
             gemButton.rect.sizeDelta = new Vector2(WideButton, ButtonHeight);
             closeRect.anchoredPosition = new Vector2(onSpeedUp != null ? 145f : 0f, ButtonYBuilding);
@@ -186,22 +190,22 @@ public class UpgradePopup : MonoBehaviour
         }
         else
         {
-            currentLevel.text = data.isNew ? "Nepostavený" : "Level " + data.level;
+            GameTextView.Set(currentLevel, () => data.isNew ? GameText.Get("not_built") : GameText.Get("level", data.level));
             currentLevel.fontSize = data.isNew ? 22 : 28;
-            nextLevel.text = "Level " + (data.level + 1);
-            nextCaption.text = data.isNew ? "PO POSTAVENÍ" : "PO VYLEPŠENÍ";
-            costLabel.text = data.isNew ? "CENA A ČAS STAVBY" : "CENA A ČAS VYLEPŠENIA";
-            upgradeText.text = data.isNew ? "POSTAVIŤ" : "VYLEPŠIŤ";
+            GameTextView.Set(nextLevel, () => GameText.Get("level", data.level + 1));
+            GameTextView.Set(nextCaption, () => GameText.Get(data.isNew ? "after_build" : "after_upgrade"));
+            GameTextView.Set(costLabel, () => GameText.Get(data.isNew ? "build_cost_time" : "upgrade_cost_time"));
+            GameTextView.Set(upgradeText, () => GameText.Get(data.isNew ? "build" : "upgrade"));
             coinRow.value.text = Format(data.coinCost);
             energyRow.value.text = Format(data.energyCost);
-            timeRow.value.text = data.buildSeconds > 0 ? BuildTimers.FormatDuration(data.buildSeconds) : "hneď";
+            GameTextView.Set(timeRow.value, () => data.buildSeconds > 0 ? BuildTimers.FormatDuration(data.buildSeconds) : GameText.Get("instant"));
             panel.sizeDelta = new Vector2(PanelWidth, PanelHeight);
             SetNoteY(NoteY);
 
             if (gemsOffered)
             {
                 // [POSTAVIŤ / VYLEPŠIŤ] [ZA drahokam N] [ZAVRIEŤ]
-                gemButton.prefix.text = "ZA";
+                GameTextView.Set(gemButton.prefix, () => GameText.Get("for_cost"));
                 gemButton.value.text = Format(data.gemCost);
                 SetButton(upgradeButton, new Vector2(-224f, ButtonY), NarrowButton);
                 gemButton.rect.anchoredPosition = new Vector2(0f, ButtonY);
@@ -272,24 +276,24 @@ public class UpgradePopup : MonoBehaviour
 
         string message = "";
         bool hint = false;
-        string missing = !coinsOk && !energyOk ? "mincí aj energie" : !coinsOk ? "mincí" : !energyOk ? "energie" : null;
+        bool missing = !coinsOk || !energyOk;
         if (blocked)
-            message = info.blockedReason;
+            message = info.blockedReason.StartsWith("Najprv vylepši Hotel na Level ") ? GameText.Get("upgrade_hotel_first", info.level + 1) : info.blockedReason;
         else if (res == null)
-            message = "Zdroje rezortu nie sú dostupné";
-        else if (missing != null && gemsOk)
+            message = GameText.Get("resources_unavailable");
+        else if (missing && gemsOk)
         {
-            message = "Nedostatok " + missing + " – môžeš zaplatiť drahokamami";
+            message = GameText.Get(!coinsOk && !energyOk ? "missing_both_pay_gems" : !coinsOk ? "missing_coins_pay_gems" : "missing_energy_pay_gems");
             hint = true;
         }
-        else if (missing != null && gemsOffered)
-            message = "Nedostatok " + missing + " aj drahokamov";
+        else if (missing && gemsOffered)
+            message = GameText.Get(!coinsOk && !energyOk ? "missing_all_resources" : !coinsOk ? "missing_coins_and_gems" : "missing_energy_and_gems");
         else if (!coinsOk && !energyOk)
-            message = "Nedostatok mincí aj energie";
+            message = GameText.Get("missing_coins_energy");
         else if (!coinsOk)
-            message = "Nedostatok mincí – chýba ti " + Format(info.coinCost - coins);
+            message = GameText.Get("missing_coins_amount", Format(info.coinCost - coins));
         else if (!energyOk)
-            message = "Nedostatok energie – chýba ti " + Format(info.energyCost - energy);
+            message = GameText.Get("missing_energy_amount", Format(info.energyCost - energy));
 
         note.text = message;
         note.color = blocked || hint ? TitleColor : ShortColor;   // podmienka / rada = zlatá, nedostatok = červená
@@ -307,7 +311,7 @@ public class UpgradePopup : MonoBehaviour
         progressFill.anchorMax = new Vector2(Mathf.Max(0.02f, c.Progress), 1f);
 
         // Bez internetu odpočet stojí - len vtedy sa ukáže vysvetlenie (v riadku pod priebehom).
-        const string WaitingText = "Čakám na pripojenie k internetu…";
+        string WaitingText = GameText.Get("waiting_for_internet");
 
         if (onSpeedUp == null)
         {
@@ -328,7 +332,7 @@ public class UpgradePopup : MonoBehaviour
         }
         SetGemButtonState(gemsOk && !done, gemsOk);
 
-        if (!gemsOk) SetNote("Nedostatok drahokamov – chýba ti " + Format(cost - gems), ShortColor);
+        if (!gemsOk) SetNote(GameText.Get("missing_gems_amount", Format(cost - gems)), ShortColor);
         else SetNote(waiting ? WaitingText : "", TitleColor);
     }
 
@@ -391,6 +395,7 @@ public class UpgradePopup : MonoBehaviour
             panel.localScale = Vector3.one * s;
         }
 
+        if (languageRevision != GameText.Revision) { languageRevision = GameText.Revision; Refresh(); }
         if (info.IsBuilding) UpdateBuilding();
 
         if (EscapePressed()) Close();
@@ -462,8 +467,8 @@ public class UpgradePopup : MonoBehaviour
         // Úroveň teraz -> po vylepšení
         levelsGroup = CreateUi("Levels", panel);
         Place(levelsGroup, new Vector2(0f, -190f), new Vector2(600f, 80f));
-        currentLevel = CreateLevelBox(levelsGroup.transform, "Current", -165f, "TERAZ", Sprites.LevelBox, out _);
-        nextLevel = CreateLevelBox(levelsGroup.transform, "Next", 165f, "PO VYLEPŠENÍ", Sprites.LevelBoxNext, out nextCaption);
+        currentLevel = CreateLevelBox(levelsGroup.transform, "Current", -165f, "now", Sprites.LevelBox, out _);
+        nextLevel = CreateLevelBox(levelsGroup.transform, "Next", 165f, "after_upgrade", Sprites.LevelBoxNext, out nextCaption);
         var arrowGo = CreateUi("Arrow", levelsGroup.transform);
         Place(arrowGo, new Vector2(0f, -40f), new Vector2(52f, 40f));
         var arrow = arrowGo.AddComponent<Image>();
@@ -473,7 +478,7 @@ public class UpgradePopup : MonoBehaviour
 
         // Cena
         costLabel = CreateText("CostLabel", panel, new Vector2(0f, -262f), new Vector2(600f, 26f), 18, TitleColor, TextAnchor.MiddleCenter);
-        costLabel.text = "CENA VYLEPŠENIA";
+        GameTextView.Set(costLabel, () => GameText.Get("upgrade_cost"));
         // [minca] 80   [energia] 10   [hodiny] 8 min
         coinRow = CreateCostRow(panel, "CoinCost", "UI/Icons/coin", new Vector2(-200f, -312f));
         energyRow = CreateCostRow(panel, "EnergyCost", "UI/Icons/energy", new Vector2(-20f, -312f));
@@ -517,17 +522,17 @@ public class UpgradePopup : MonoBehaviour
         maxGroup = CreateUi("Max", panel);
         Place(maxGroup, new Vector2(0f, -190f), new Vector2(660f, 120f));
         var maxTitle = CreateText("MaxTitle", maxGroup.transform, new Vector2(0f, -40f), new Vector2(600f, 44f), 32, TitleColor, TextAnchor.MiddleCenter);
-        maxTitle.text = "MAX Level";
+        GameTextView.Set(maxTitle, () => GameText.Get("max_level"));
         maxMessage = CreateText("MaxMessage", maxGroup.transform, new Vector2(0f, -82f), new Vector2(640f, 26f), 19, ValueColor, TextAnchor.MiddleCenter);
         maxGroup.SetActive(false);
 
         // Tlačidlá
-        upgradeButton = CreateButton(panel, "UpgradeButton", "VYLEPŠIŤ", Sprites.Green, new Vector2(-145f, ButtonY),
+        upgradeButton = CreateButton(panel, "UpgradeButton", "upgrade", Sprites.Green, new Vector2(-145f, ButtonY),
             new Color(0.03f, 0.36f, 0.08f, 1f), out upgradeImage, out upgradeText);
         upgradeText.color = Color.white;
         upgradeButton.onClick.AddListener(OnUpgradeClicked);
 
-        closeButton = CreateButton(panel, "CloseButton", "ZAVRIEŤ", Sprites.WoodButton, new Vector2(145f, ButtonY),
+        closeButton = CreateButton(panel, "CloseButton", "close", Sprites.WoodButton, new Vector2(145f, ButtonY),
             new Color(0.1f, 0.06f, 0.03f, 1f), out _, out _);
         closeRect = (RectTransform)closeButton.transform;
         closeButton.onClick.AddListener(Close);
@@ -604,7 +609,7 @@ public class UpgradePopup : MonoBehaviour
         image.raycastTarget = false;
 
         var cap = CreateText("Caption", box.transform, new Vector2(0f, -18f), new Vector2(170f, 20f), 14, TitleColor, TextAnchor.MiddleCenter);
-        cap.text = caption;
+        GameTextView.Set(cap, () => GameText.Get(caption));
         captionText = cap;
         return CreateText("Value", box.transform, new Vector2(0f, -48f), new Vector2(170f, 34f), 28, ValueColor, TextAnchor.MiddleCenter);
     }
@@ -663,7 +668,7 @@ public class UpgradePopup : MonoBehaviour
 
         text = CreateText("Label", go.transform, Vector2.zero, Vector2.zero, 26, ValueColor, TextAnchor.MiddleCenter);
         Stretch(text.rectTransform);
-        text.text = label;
+        GameTextView.Set(text, () => GameText.Get(label));
         return button;
     }
 

@@ -22,6 +22,7 @@ public class BottleneckWarningUI : MonoBehaviour
         public Image background;
         public Image icon;
         public Text label;
+        public BottleneckLocalizedLabel localizedLabel;
         public RectTransform marker;
         public Display shown = Display.Hidden;
         public float pop;           // 1 -> 0 po zmene stavu (krátke "vyskočenie")
@@ -56,7 +57,7 @@ public class BottleneckWarningUI : MonoBehaviour
             var service = pair.Key;
             var card = pair.Value;
 
-            Display display = Evaluate(service, out string text);
+            Display display = Evaluate(service, out string key, out string formatKey, out int count);
             if (display != card.shown)
             {
                 ApplyLook(card, display);
@@ -65,7 +66,7 @@ public class BottleneckWarningUI : MonoBehaviour
             }
             if (display == Display.Hidden) continue;
 
-            if (card.label.text != text) card.label.text = text;
+            card.localizedLabel.Set(key, formatKey, count);
 
             // pop po zmene stavu + jemné pulzovanie pri "nestíha" (púta pozornosť, nebliká)
             card.pop = Mathf.MoveTowards(card.pop, 0f, Time.unscaledDeltaTime * 3f);
@@ -75,35 +76,54 @@ public class BottleneckWarningUI : MonoBehaviour
         }
     }
 
-    Display Evaluate(BottleneckService service, out string text)
+    Display Evaluate(BottleneckService service, out string key, out string formatKey, out int count)
     {
-        text = null;
+        key = null;
+        formatKey = null;
+        count = 0;
         var state = monitor.GetState(service);
         if (state == BottleneckState.Locked) return Display.Hidden;
 
+        string prefix = ServiceKey(service);
         int queue = monitor.GetQueue(service);
-        int free = monitor.GetFreeSeats(service); // -1 = obsadenosť zatiaľ nikto nenahlásil
+        int free = monitor.GetFreeSeats(service);
 
         if (state == BottleneckState.Bottleneck)
         {
-            text = BottleneckServiceInfo.OverloadedText(service) + " (" + queue + " čaká)";
+            key = prefix + "_overloaded";
+            formatKey = "waiting_queue";
+            count = queue;
             return Display.Overloaded;
         }
 
         if (free > 0)
         {
-            text = BottleneckServiceInfo.FreeText(service) + " (" + free + ")";
+            key = prefix + "_free";
+            formatKey = "free_capacity";
+            count = free;
             return Display.Free;
         }
 
         if (free == 0 || queue > 0)
         {
-            text = BottleneckServiceInfo.FullText(service);
+            key = prefix + "_full";
             return Display.Full;
         }
 
-        text = BottleneckServiceInfo.FreeText(service);
+        key = prefix + "_free";
         return Display.Free;
+    }
+
+    static string ServiceKey(BottleneckService service)
+    {
+        switch (service)
+        {
+            case BottleneckService.Rooms: return "reception";
+            case BottleneckService.Drinks: return "bar";
+            case BottleneckService.Food: return "restaurant";
+            case BottleneckService.Relax: return "pool";
+            default: return "bungalows";
+        }
     }
 
     static void ApplyLook(Card card, Display display)
@@ -272,6 +292,7 @@ public class BottleneckWarningUI : MonoBehaviour
         textRect.offsetMin = new Vector2(70f, 4f);
         textRect.offsetMax = new Vector2(-16f, -4f);
         card.label = textGo.AddComponent<Text>();
+        card.localizedLabel = textGo.AddComponent<BottleneckLocalizedLabel>();
         card.label.font = BuiltinFont();
         card.label.fontSize = 26;
         card.label.fontStyle = FontStyle.Bold;

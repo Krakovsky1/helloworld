@@ -212,7 +212,7 @@ public class GuestWaveUI : MonoBehaviour
             rewardPanel.SetActive(false);
 
         if (guestCountText != null)
-            guestCountText.text = guests.Count + " GUESTS";
+            GameTextView.Set(guestCountText, () => GameText.Get("guest_count", currentWaveGuestCount));
 
         foreach (GameObject guest in guests)
         {
@@ -369,20 +369,16 @@ public class GuestWaveUI : MonoBehaviour
             return;
 
         if (roomRewardText != null)
-            roomRewardText.text =
-                "Room: " + rewardManager.RoomCount;
+            GameTextView.Set(roomRewardText, () => GameText.Get("reward_room", rewardManager.RoomCount));
 
         if (relaxRewardText != null)
-            relaxRewardText.text =
-                "Relax: " + rewardManager.RelaxCount;
+            GameTextView.Set(relaxRewardText, () => GameText.Get("reward_relax", rewardManager.RelaxCount));
 
         if (foodRewardText != null)
-            foodRewardText.text =
-                "Food: " + rewardManager.FoodCount;
+            GameTextView.Set(foodRewardText, () => GameText.Get("reward_food", rewardManager.FoodCount));
 
         if (drinkRewardText != null)
-            drinkRewardText.text =
-                "Drink: " + rewardManager.DrinkCount;
+            GameTextView.Set(drinkRewardText, () => GameText.Get("reward_drink", rewardManager.DrinkCount));
 
         string vipCoins = rewardManager.HasVipGuest
             ? " <color=#55D995>(VIP +" + rewardManager.VipBonusCoins + ")</color>"
@@ -395,16 +391,13 @@ public class GuestWaveUI : MonoBehaviour
             : "";
 
         if (totalCoinsText != null)
-            totalCoinsText.text =
-                "Coins: " + rewardManager.TotalCoins + vipCoins;
+            GameTextView.Set(totalCoinsText, () => GameText.Get("reward_coins", rewardManager.TotalCoins) + vipCoins);
 
         if (totalEnergyText != null)
-            totalEnergyText.text =
-                "Energy: +" + rewardManager.TotalEnergy + vipEnergy;
+            GameTextView.Set(totalEnergyText, () => GameText.Get("reward_energy", rewardManager.TotalEnergy) + vipEnergy);
 
         if (totalResortValueText != null)
-            totalResortValueText.text =
-                "Resort Value: +" + rewardManager.TotalResortValue + vipResort;
+            GameTextView.Set(totalResortValueText, () => GameText.Get("reward_resort_value", rewardManager.TotalResortValue) + vipResort);
 
         RefreshStarRatingSummary();
     }
@@ -420,30 +413,29 @@ public class GuestWaveUI : MonoBehaviour
 
         if (guestServiceManager == null)
         {
-            starRatingSummaryText.text = "WAVE SUMMARY\nNo rating data";
+            GameTextView.Set(starRatingSummaryText, () => GameText.Get("wave_summary_no_rating"));
             return;
         }
 
         // TextovÃ© oznaÄenia namiesto symbolov hviezdiÄiek:
         // Text labels are used instead of star symbols for font compatibility.
-        starRatingSummaryText.text =
-            "<b>GUEST RATING</b>\n" +
-            "5 STARS       " + guestServiceManager.GetRatingCount(5) + "\n" +
-            "4 STARS       " + guestServiceManager.GetRatingCount(4) + "\n" +
-            "3 STARS       " + guestServiceManager.GetRatingCount(3) + "\n" +
-            "2 STARS       " + guestServiceManager.GetRatingCount(2) + "\n" +
-            "1 STAR          " + guestServiceManager.GetRatingCount(1) + "\n" +
+        GameTextView.Set(starRatingSummaryText, () =>
+            "<b>" + GameText.Get("guest_rating") + "</b>\n" +
+            GameText.Get("rating_5", guestServiceManager.GetRatingCount(5)) + "\n" +
+            GameText.Get("rating_4", guestServiceManager.GetRatingCount(4)) + "\n" +
+            GameText.Get("rating_3", guestServiceManager.GetRatingCount(3)) + "\n" +
+            GameText.Get("rating_2", guestServiceManager.GetRatingCount(2)) + "\n" +
+            GameText.Get("rating_1", guestServiceManager.GetRatingCount(1)) + "\n" +
             "--------------------\n" +
-            "<b>TOTAL: " + guestServiceManager.TotalRatings + "</b>\n" +
-            "Below 5 stars: " + guestServiceManager.RatingsBelowFive + "/" +
-            guestServiceManager.TotalRatings + " (" +
-            guestServiceManager.RatingsBelowFivePercentage.ToString("F1") + "%)\n" +
+            "<b>" + GameText.Get("rating_total", guestServiceManager.TotalRatings) + "</b>\n" +
+            GameText.Get("rating_below_five", guestServiceManager.RatingsBelowFive,
+                guestServiceManager.TotalRatings, guestServiceManager.RatingsBelowFivePercentage.ToString("F1")) + "\n" +
             (rewardManager != null && rewardManager.RatingPenaltyApplied
-                ? "<color=#FF6B6B><b>REWARD PENALTY: -20%</b></color>"
-                : "<color=#7CFF9B><b>NO REWARD PENALTY</b></color>") +
+                ? "<color=#FF6B6B><b>" + GameText.Get("reward_penalty") + "</b></color>"
+                : "<color=#7CFF9B><b>" + GameText.Get("no_reward_penalty") + "</b></color>") +
             (rewardManager != null && rewardManager.HasVipGuest
-                ? "\n<color=#55D995><b>VIP BONUS APPLIED: x" + rewardManager.VipRewardMultiplier.ToString("0.##") + "</b></color>"
-                : "");
+                ? "\n<color=#55D995><b>" + GameText.Get("vip_bonus_applied", rewardManager.VipRewardMultiplier.ToString("0.##")) + "</b></color>"
+                : ""));
     }
 
     public void ClaimRewards()
@@ -525,7 +517,7 @@ public class GuestWaveUI : MonoBehaviour
         }
         else
         {
-            needsText.text = "No needs";
+            GameTextView.Set(needsText, () => GameText.Get("no_needs"));
         }
     }
 
@@ -584,7 +576,7 @@ public class GuestWaveUI : MonoBehaviour
 
             if (guestNeeds == null)
             {
-                needsText.text = "No needs";
+                GameTextView.Set(needsText, () => GameText.Get("no_needs"));
                 return;
             }
 
@@ -595,12 +587,12 @@ public class GuestWaveUI : MonoBehaviour
                 if (need.IsCompleted)
                     continue;
 
-                activeNeeds.Add(need.Type.ToString());
+                activeNeeds.Add("need_" + need.Type.ToString().ToLowerInvariant());
             }
 
-            needsText.text = activeNeeds.Count > 0
-                ? string.Join(" â¢ ", activeNeeds)
-                : "No active needs";
+            GameTextView.Set(needsText, () => activeNeeds.Count > 0
+                ? string.Join(" • ", activeNeeds.ConvertAll(key => GameText.Get(key)))
+                : GameText.Get("no_active_needs"));
         }
     }
 }

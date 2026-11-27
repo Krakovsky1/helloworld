@@ -100,9 +100,8 @@ public class StaffHUD : MonoBehaviour
 
         if (staffCountText != null)
         {
-            staffCountText.text = "STAFF: " +
-                                  staffManager.AvailableStaff + "/" +
-                                  staffManager.TotalStaff;
+            GameTextBinding.Set(staffCountText, "staff_count",
+                staffManager.AvailableStaff, staffManager.TotalStaff);
         }
 
         int price = staffManager.HireCost;
@@ -110,9 +109,10 @@ public class StaffHUD : MonoBehaviour
 
         if (hireButtonText != null)
         {
-            hireButtonText.text = atMax
-                ? "MAX STAFF"
-                : "+ HIRE STAFF\n" + price + " COINS";
+            if (atMax)
+                GameTextBinding.Set(hireButtonText, "max_staff");
+            else
+                GameTextBinding.Set(hireButtonText, "hire_staff_hud", price);
         }
 
         // Pri chybajucom Resource manageri nedeaktivujeme Button potichu:

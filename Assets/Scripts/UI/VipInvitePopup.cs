@@ -114,6 +114,8 @@ public class VipInvitePopup : MonoBehaviour
 
     void Subscribe(bool on)
     {
+        GameText.Changed -= Refresh;
+        if (on) GameText.Changed += Refresh;
         if (ResortResources.Instance != null)
         {
             ResortResources.Instance.Changed -= Refresh;
@@ -188,13 +190,12 @@ public class VipInvitePopup : MonoBehaviour
         var invited = manager.InvitedVip;
         if (invited != null)
         {
-            subtitle.text = invited.displayName + " príde s vlnou " + manager.InvitedForWave +
-                            ". Nová ponuka bude po skončení tejto vlny.";
+            subtitle.text = GameText.Get("vip_invited_wave", invited.displayName, manager.InvitedForWave);
             subtitle.color = TitleColor;
         }
         else
         {
-            subtitle.text = "Pozvi jedného VIP hosťa – príde spolu s ďalšou vlnou. Ponuka sa obmení po vlne.";
+            subtitle.text = GameText.Get("vip_invitation_intro");
             subtitle.color = SubColor;
         }
 
@@ -217,11 +218,11 @@ public class VipInvitePopup : MonoBehaviour
 
         card.portrait.sprite = vip.portrait != null ? vip.portrait : Resources.Load<Sprite>("UI/Icons/vip_star");
         card.name.text = vip.displayName;
-        card.profession.text = vip.profession;
+        card.profession.text = GameText.GetOr("vip_" + vip.id + "_profession", vip.profession);
 
         var rarityColor = VipPersonality.RarityColor(vip.rarity);
         card.rarityPill.color = rarityColor;
-        card.rarityText.text = VipPersonality.RarityName(vip.rarity).ToUpperInvariant();
+        card.rarityText.text = GameText.Get("vip_rarity_" + vip.rarity.ToString().ToLowerInvariant()).ToUpperInvariant();
 
         card.frame.sprite = isInvited ? Sprites.CardInvited : Sprites.Card;
 
@@ -248,7 +249,7 @@ public class VipInvitePopup : MonoBehaviour
             bool ok = isInvited || (level > 0 && level >= needed);
 
             chip.icon.sprite = Resources.Load<Sprite>(BuildingIcon(req.building));
-            chip.label.text = req.requireMaxLevel ? "MAX" : "Lv " + req.minLevel;
+            chip.label.text = req.requireMaxLevel ? GameText.Get("max_short") : GameText.Get("vip_level_short", req.minLevel);
             chip.label.color = ok ? OkColor : ShortColor;
             chip.background.sprite = ok ? Sprites.ChipOk : Sprites.ChipMissing;
         }
@@ -266,7 +267,7 @@ public class VipInvitePopup : MonoBehaviour
         }
         card.noBuildings.gameObject.SetActive(shown == 0);
 
-        card.reward.text = "Násobiteľ odmien  ×" + vip.rewardMultiplier.ToString("0.0#", CultureInfo.InvariantCulture);
+        card.reward.text = GameText.Get("vip_reward_multiplier", vip.rewardMultiplier.ToString("0.0#", CultureInfo.InvariantCulture));
 
         // Tlačidlo
         bool canInvite = manager.CanInvite(vip, out _);
@@ -274,14 +275,14 @@ public class VipInvitePopup : MonoBehaviour
         if (isInvited)
         {
             card.buttonImage.sprite = Sprites.Invited;
-            card.buttonText.text = "POZVANÝ";
+            card.buttonText.text = GameText.Get("vip_invited");
             card.buttonText.color = ValueColor;
             card.buttonShadow.effectColor = new Color(0.4f, 0.25f, 0.04f, 1f);
         }
         else
         {
             card.buttonImage.sprite = canInvite ? UpgradePopup.Sprites.Green : UpgradePopup.Sprites.Gray;
-            card.buttonText.text = "POZVAŤ";
+            card.buttonText.text = GameText.Get("vip_invite");
             card.buttonText.color = canInvite ? Color.white : new Color(0.85f, 0.85f, 0.85f, 1f);
             card.buttonShadow.effectColor = canInvite ? new Color(0.03f, 0.36f, 0.08f, 1f) : new Color(0.18f, 0.18f, 0.18f, 1f);
         }
@@ -375,7 +376,7 @@ public class VipInvitePopup : MonoBehaviour
         badgeShadow.effectDistance = new Vector2(0f, -6f);
 
         var title = CreateText("Title", panel, new Vector2(0f, -102f), new Vector2(900f, 56f), 44, TitleColor, TextAnchor.MiddleCenter);
-        title.text = "VIP HOSTIA";
+        GameTextView.Set(title, () => GameText.Get("vip_guests"));
         subtitle = CreateText("Subtitle", panel, new Vector2(0f, -146f), new Vector2(1160f, 30f), 21, SubColor, TextAnchor.MiddleCenter);
 
         for (int i = 0; i < 3; i++)
@@ -385,7 +386,7 @@ public class VipInvitePopup : MonoBehaviour
         }
         LayoutCards(cards.Count);
 
-        var closeButton = CreateButton(panel, "CloseButton", "ZAVRIEŤ", UpgradePopup.Sprites.WoodButton,
+        var closeButton = CreateButton(panel, "CloseButton", "close", UpgradePopup.Sprites.WoodButton,
             new Vector2(0f, -PanelHeight + 70f), new Vector2(300f, 76f), 28, new Color(0.1f, 0.06f, 0.03f, 1f), out _, out _);
         closeButton.onClick.AddListener(Close);
 
@@ -432,22 +433,22 @@ public class VipInvitePopup : MonoBehaviour
 
         // Podmienky: cena + hodnota rezortu
         var conditions = CreateText("ConditionsLabel", t, new Vector2(0f, -280f), new Vector2(350f, 24f), 16, TitleColor, TextAnchor.MiddleCenter);
-        conditions.text = "PODMIENKY";
-        card.coinValue = CreateStatBox(t, "Cost", "CENA POZVANIA", "UI/Icons/coin", new Vector2(-88f, -330f));
-        card.valueValue = CreateStatBox(t, "ResortValue", "HODNOTA REZORTU", "UI/Icons/value", new Vector2(88f, -330f));
+        GameTextView.Set(conditions, () => GameText.Get("vip_conditions"));
+        card.coinValue = CreateStatBox(t, "Cost", "vip_invite_cost", "UI/Icons/coin", new Vector2(-88f, -330f));
+        card.valueValue = CreateStatBox(t, "ResortValue", "vip_resort_value", "UI/Icons/value", new Vector2(88f, -330f));
 
         // Podmienky: budovy
         var buildings = CreateText("BuildingsLabel", t, new Vector2(0f, -388f), new Vector2(350f, 22f), 15, TitleColor, TextAnchor.MiddleCenter);
-        buildings.text = "BUDOVY";
+        GameTextView.Set(buildings, () => GameText.Get("vip_buildings"));
         for (int i = 0; i < MaxChips; i++)
             card.chips.Add(CreateChip(t, i));
         card.noBuildings = CreateText("NoBuildings", t, new Vector2(0f, -436f), new Vector2(350f, 24f), 18, SubColor, TextAnchor.MiddleCenter);
-        card.noBuildings.text = "Bez požiadaviek";
+        GameTextView.Set(card.noBuildings, () => GameText.Get("vip_no_requirements"));
         card.noBuildings.gameObject.SetActive(false);
 
         card.reward = CreateText("Reward", t, new Vector2(0f, -505f), new Vector2(350f, 26f), 19, TitleColor, TextAnchor.MiddleCenter);
 
-        card.button = CreateButton(t, "InviteButton", "POZVAŤ", UpgradePopup.Sprites.Green, new Vector2(0f, -555f),
+        card.button = CreateButton(t, "InviteButton", "vip_invite", UpgradePopup.Sprites.Green, new Vector2(0f, -555f),
             new Vector2(300f, 64f), 26, new Color(0.03f, 0.36f, 0.08f, 1f), out card.buttonImage, out card.buttonText);
         card.buttonText.color = Color.white;
         card.buttonShadow = card.button.GetComponent<Shadow>();
@@ -467,7 +468,7 @@ public class VipInvitePopup : MonoBehaviour
         image.raycastTarget = false;
 
         var cap = CreateText("Caption", box.transform, new Vector2(0f, -16f), new Vector2(160f, 18f), 13, TitleColor, TextAnchor.MiddleCenter);
-        cap.text = caption;
+        GameTextView.Set(cap, () => GameText.Get(caption));
 
         var icon = CreateUi("Icon", box.transform);
         var iconRect = (RectTransform)icon.transform;
@@ -530,7 +531,8 @@ public class VipInvitePopup : MonoBehaviour
 
         text = CreateText("Label", go.transform, Vector2.zero, Vector2.zero, fontSize, ValueColor, TextAnchor.MiddleCenter);
         Stretch(text.rectTransform);
-        text.text = label;
+        text.text = GameText.Get(label);
+        if (name == "CloseButton") GameTextView.Set(text, () => GameText.Get(label));
         return button;
     }
 

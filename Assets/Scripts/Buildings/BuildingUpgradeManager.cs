@@ -518,7 +518,7 @@ public class BuildingUpgradeManager : MonoBehaviour
     static void UpdateConstructionLabel(Building b)
     {
         var c = b.construction;
-        string text = c.WaitingForServer ? "Čaká na čas…" : "Stavba " + BuildTimers.FormatCountdown(c.Remaining);
+        string text = c.WaitingForServer ? GameText.Get("waiting_for_time") : GameText.Get("construction_countdown", BuildTimers.FormatCountdown(c.Remaining));
         if (text == b.shownLabel) return;
         b.shownLabel = text;
         b.levelText.text = text;

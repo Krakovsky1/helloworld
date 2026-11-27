@@ -63,8 +63,7 @@ public class GuestServiceUI : MonoBehaviour
         if (pendingRequestsCountText == null || serviceManager == null)
             return;
 
-        pendingRequestsCountText.text =
-            "ČAKAJÚCE POŽIADAVKY: " + serviceManager.PendingRequestCount;
+        GameTextBinding.Set(pendingRequestsCountText, "pending_requests_count", serviceManager.PendingRequestCount);
     }
 
     private void RefreshStaffCount()
@@ -72,7 +71,7 @@ public class GuestServiceUI : MonoBehaviour
         if (staffCountText == null || staffManager == null)
             return;
 
-        staffCountText.text = "STAFF: " + staffManager.AvailableStaff + "/" + staffManager.TotalStaff;
+        GameTextBinding.Set(staffCountText, "staff_count", staffManager.AvailableStaff, staffManager.TotalStaff);
     }
 
     private void RefreshRequestList()
@@ -132,7 +131,7 @@ public class GuestServiceUI : MonoBehaviour
         }
         else
         {
-            requestText.text = GetServiceName(request.Type);
+            GameTextBinding.Set(requestText, GetServiceKey(request.Type));
             requestText.color = Color.white;
         }
 
@@ -140,13 +139,13 @@ public class GuestServiceUI : MonoBehaviour
         {
             assignButton.interactable = false;
             if (buttonText != null)
-                buttonText.text = "Processing";
+                GameTextBinding.Set(buttonText, "serving");
         }
         else
         {
             assignButton.interactable = staffManager != null && staffManager.AvailableStaff >= request.StaffRequired;
             if (buttonText != null)
-                buttonText.text = "ASSIGN";
+                GameTextBinding.Set(buttonText, "assign");
 
             assignButton.onClick.RemoveAllListeners();
             assignButton.onClick.AddListener(() =>
@@ -219,14 +218,21 @@ public class GuestServiceUI : MonoBehaviour
         return null;
     }
 
-    private string GetServiceName(GuestNeedType type)
+    private string GetServiceKey(GuestNeedType type)
     {
         switch (type)
         {
-            case GuestNeedType.Food: return "RESTAURANT";
-            case GuestNeedType.Drink: return "BAR / DRINK";
-            case GuestNeedType.Relax: return "RELAX";
-            default: return type.ToString().ToUpperInvariant();
+            case GuestNeedType.Food:
+                return "request_restaurant";
+
+            case GuestNeedType.Drink:
+                return "request_bar";
+
+            case GuestNeedType.Relax:
+                return "request_relax";
+
+            default:
+                return "request_room";
         }
     }
 }
