@@ -14,7 +14,7 @@ using UnityEngine.SceneManagement;
 //
 // Kedy sa ukladá: po každej akcii - zmena zdrojov (nákup, odmeny, najatie personálu), začiatok aj koniec
 // stavby, štart vlny, príchod hostí, prijatie / odmietnutie, koniec pobytu, odchod hostí, koniec cooldownu.
-// Navyše každých 15 s a pri prepnutí / zatvorení aplikácie. Viac zmien v jednom snímku = jedno uloženie.
+// Navyše každé 4 s a pri prepnutí / zatvorení aplikácie. Viac zmien v jednom snímku = jedno uloženie.
 //
 // Súbor: Application.persistentDataPath/save.json (zapisuje sa cez dočasný súbor, aby sa nepoškodil).
 // Vymazanie uloženej hry: Tools > Tropical Resort > Vymazať uloženú hru.
@@ -22,7 +22,7 @@ using UnityEngine.SceneManagement;
 public class SaveManager : MonoBehaviour
 {
     public const string FileName = "save.json";
-    const float AutosaveInterval = 15f;
+    const float AutosaveInterval = 4f;
     const float WaitForServerTime = 6f;   // s - pri obnove cooldownu počkáme na čas servera (offline sa pokračuje bez neho)
 
     public static SaveManager Instance { get; private set; }
@@ -383,8 +383,15 @@ public class SaveManager : MonoBehaviour
             string tmp = path + ".tmp";
 
             File.WriteAllText(tmp, json);
-            if (File.Exists(path)) File.Delete(path);
-            File.Move(tmp, path);
+
+            if (File.Exists(path))
+            {
+                File.Replace(tmp, path, null);
+            }
+            else
+            {
+                File.Move(tmp, path);
+            }
         }
         catch (Exception e)
         {
